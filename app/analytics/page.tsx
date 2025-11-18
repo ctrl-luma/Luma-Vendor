@@ -219,8 +219,11 @@ export default function AnalyticsPage() {
                                 animation: `barGrow 0.6s ease-out ${index * 50}ms both`
                               }}
                             >
-                              <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-card border shadow-lg text-card-foreground text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                                ${item.revenue.toLocaleString()}
+                              <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-card border border-border shadow-xl text-card-foreground text-xs px-3 py-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">
+                                <div className="font-semibold">${item.revenue.toLocaleString()}</div>
+                                <div className="text-muted-foreground mt-0.5">
+                                  {item.hour || item.day || item.week || item.month}
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -243,7 +246,7 @@ export default function AnalyticsPage() {
                     <span>${Math.round(getMinRevenue()).toLocaleString()}</span>
                   </div>
                   
-                  <div className="h-40 relative overflow-visible">
+                  <div className="h-40 relative">
                     {/* Grid lines background */}
                     <div className="absolute inset-0">
                       {[0, 25, 50, 75, 100].map((y) => (
@@ -256,31 +259,49 @@ export default function AnalyticsPage() {
                     </div>
                     
                     {/* SVG for line chart */}
-                    <svg className="absolute inset-0 w-full h-full overflow-visible">
+                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                       <defs>
                         <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                           <stop offset="0%" stopColor="rgb(96, 165, 250)" stopOpacity="0.3" />
                           <stop offset="100%" stopColor="rgb(96, 165, 250)" stopOpacity="0" />
                         </linearGradient>
+                        <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="rgb(96, 165, 250)" />
+                          <stop offset="100%" stopColor="rgb(96, 165, 250)" />
+                        </linearGradient>
+                        <mask id="lineMask">
+                          <rect x="0" y="0" width="0" height="100" fill="white">
+                            <animate attributeName="width" from="0" to="100" dur="1.5s" fill="freeze" />
+                          </rect>
+                        </mask>
                       </defs>
                       
                       {(() => {
                         const data = getCurrentData();
-                        const width = 100;
-                        const height = 100;
-                        const padding = 5;
                         
                         const points = data.map((item: any, index: number) => {
-                          const x = (index / (data.length - 1)) * width;
-                          const y = height - ((item.revenue - getMinRevenue()) / (getMaxRevenue() - getMinRevenue())) * (height - padding * 2) - padding;
-                          return { x, y, revenue: item.revenue };
+                          // Center each point in its column, like the bar chart
+                          const columnWidth = 100 / data.length;
+                          const x = (index * columnWidth) + (columnWidth / 2);
+                          const normalizedValue = (item.revenue - getMinRevenue()) / (getMaxRevenue() - getMinRevenue());
+                          const y = 95 - (normalizedValue * 85); // Invert and scale to use most of the height
+                          return { x, y };
                         });
                         
-                        const linePath = points
+                        // Extend the line to the edges
+                        const firstPoint = points[0];
+                        const lastPoint = points[points.length - 1];
+                        const extendedPoints = [
+                          { x: 0, y: firstPoint.y }, // Extend to left edge
+                          ...points,
+                          { x: 100, y: lastPoint.y } // Extend to right edge
+                        ];
+                        
+                        const linePath = extendedPoints
                           .map((point, i) => `${i === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
                           .join(' ');
                         
-                        const areaPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
+                        const areaPath = `${linePath} L 100 100 L 0 100 Z`;
                         
                         return (
                           <g>
@@ -288,68 +309,71 @@ export default function AnalyticsPage() {
                             <path
                               d={areaPath}
                               fill="url(#areaGradient)"
-                              className="opacity-0"
-                              style={{
-                                animation: 'fadeIn 1s ease-out forwards'
-                              }}
-                            />
+                              opacity="0"
+                            >
+                              <animate attributeName="opacity" from="0" to="1" dur="1s" begin="0.5s" fill="freeze" />
+                            </path>
                             
                             {/* Line */}
                             <path
                               d={linePath}
                               fill="none"
-                              stroke="rgb(96, 165, 250)"
+                              stroke="url(#lineGradient)"
                               strokeWidth="2"
-                              className="stroke-primary"
-                              style={{
-                                strokeDasharray: '1000',
-                                strokeDashoffset: '1000',
-                                animation: 'lineChart 1.5s ease-out forwards'
-                              }}
+                              vectorEffect="non-scaling-stroke"
+                              mask="url(#lineMask)"
                             />
-                            
-                            {/* Data points and tooltips */}
-                            {points.map((point, index) => (
-                              <g key={index} className="group cursor-pointer">
-                                {/* Invisible hover area */}
-                                <rect
-                                  x={point.x - 10}
-                                  y={0}
-                                  width={20}
-                                  height={height}
-                                  fill="transparent"
-                                />
-                                
-                                {/* Data point */}
-                                <circle
-                                  cx={point.x}
-                                  cy={point.y}
-                                  r="4"
-                                  className="fill-primary opacity-0"
-                                  style={{
-                                    animation: `fadeIn 0.3s ease-out ${1 + index * 0.1}s forwards`
-                                  }}
-                                />
-                                
-                                {/* Tooltip */}
-                                <g className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                                  <foreignObject
-                                    x={point.x - 35}
-                                    y={point.y - 35}
-                                    width="70"
-                                    height="25"
-                                  >
-                                    <div className="bg-card border shadow-lg text-card-foreground text-xs px-2 py-1 rounded text-center">
-                                      ${data[index].revenue.toLocaleString()}
-                                    </div>
-                                  </foreignObject>
-                                </g>
-                              </g>
-                            ))}
                           </g>
                         );
                       })()}
                     </svg>
+                    
+                    {/* Interactive hover areas with HTML tooltips */}
+                    <div className="absolute inset-0 flex">
+                      {getCurrentData().map((item: any, index: number) => {
+                        const data = getCurrentData();
+                        const normalizedValue = (item.revenue - getMinRevenue()) / (getMaxRevenue() - getMinRevenue());
+                        const yPercent = 5 + (normalizedValue * 85); // Match the SVG calculation but inverted for CSS
+                        
+                        return (
+                          <div
+                            key={index}
+                            className="relative flex-1 group h-full"
+                          >
+                            {/* Hover area */}
+                            <div className="absolute inset-0 cursor-pointer" />
+                            
+                            {/* Tooltip positioned at the data point */}
+                            <div 
+                              className="absolute opacity-0 group-hover:opacity-100 transition-all duration-200 z-30 pointer-events-none"
+                              style={{
+                                left: '50%',
+                                bottom: `${yPercent}%`,
+                                transform: 'translate(-50%, -12px)'
+                              }}
+                            >
+                              <div className="bg-card border border-border shadow-xl text-card-foreground text-xs px-3 py-2 rounded-md whitespace-nowrap">
+                                <div className="font-semibold">${item.revenue.toLocaleString()}</div>
+                                <div className="text-muted-foreground mt-0.5">
+                                  {item.hour || item.day || item.week || item.month}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Visual indicator on hover */}
+                            <div 
+                              className="absolute w-0.5 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                              style={{
+                                left: '50%',
+                                top: 0,
+                                bottom: 0,
+                                transform: 'translateX(-50%)'
+                              }}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                   
                   {/* X-axis labels */}
