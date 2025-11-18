@@ -8,8 +8,8 @@ import { DesktopNav } from '@/components/layout/desktop-nav'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Luma Mobile Dashboard',
-  description: 'Mobile dashboard for event vendors and mobile merchants',
+  title: 'Luma Dashboard',
+  description: 'Dashboard for event vendors and mobile merchants',
   manifest: '/manifest.json',
 }
 

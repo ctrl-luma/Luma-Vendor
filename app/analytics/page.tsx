@@ -206,7 +206,26 @@ export default function AnalyticsPage() {
             <div className="p-4 pl-16 relative">
               {chartType === "bar" ? (
                 <div className="relative">
-                  <div className="h-48 flex items-end justify-between gap-1">
+                  {/* Y-axis labels */}
+                  <div className="absolute -left-12 top-0 h-40 flex flex-col justify-between text-xs text-muted-foreground">
+                    <span>${Math.round(getMaxRevenue()).toLocaleString()}</span>
+                    <span>${Math.round((getMaxRevenue() + getMinRevenue()) / 2).toLocaleString()}</span>
+                    <span>${Math.round(getMinRevenue()).toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="h-40 relative">
+                    {/* Grid lines background */}
+                    <div className="absolute inset-0">
+                      {[0, 25, 50, 75, 100].map((y) => (
+                        <div
+                          key={y}
+                          className="absolute w-full border-t border-gray-200 dark:border-gray-700"
+                          style={{ bottom: `${y}%` }}
+                        />
+                      ))}
+                    </div>
+                    
+                    <div className="absolute inset-0 flex items-end justify-between gap-1">
                     {getCurrentData().map((item: any, index: number) => {
                       const height = (item.revenue / getMaxRevenue()) * 100;
                       return (
@@ -235,6 +254,7 @@ export default function AnalyticsPage() {
                         </div>
                       );
                     })}
+                    </div>
                   </div>
                 </div>
               ) : (
