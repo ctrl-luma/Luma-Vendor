@@ -1,13 +1,24 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/theme-provider'
+import { MobileNav } from '@/components/layout/mobile-nav'
+import { DesktopNav } from '@/components/layout/desktop-nav'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Luma Vendor Dashboard',
-  description: 'Manage your Luma POS vendor account',
+  title: 'Luma Mobile Dashboard',
+  description: 'Mobile dashboard for event vendors and mobile merchants',
+  manifest: '/manifest.json',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({
@@ -20,11 +31,19 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <div className="hidden md:block">
+            <DesktopNav />
+          </div>
+          <div className="min-h-screen pb-16 md:pb-0">
+            {children}
+          </div>
+          <div className="md:hidden">
+            <MobileNav />
+          </div>
         </ThemeProvider>
       </body>
     </html>
