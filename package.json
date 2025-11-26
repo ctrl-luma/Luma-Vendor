@@ -6,7 +6,9 @@
     "dev": "next dev -p 3335",
     "build": "next build",
     "start": "next start -p 3335",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:dev": "dotenv -e .env.dev -- next build && docker buildx build --platform linux/amd64,linux/arm64 --label version=latest -t ghcr.io/ctrl-luma/lumapos-portal:dev --push .",
+    "build:prod": "dotenv -e .env.prod -- next build && docker buildx build --platform linux/amd64,linux/arm64 --label version=latest -t ghcr.io/ctrl-luma/lumapos-portal:latest --push ."
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.0.0",
@@ -37,6 +39,7 @@
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/typography": "^0.5.10",
     "autoprefixer": "^10.4.16",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^8.55.0",
     "eslint-config-next": "^14.0.4",
     "postcss": "^8.4.32",

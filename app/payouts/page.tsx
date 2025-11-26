@@ -232,7 +232,7 @@ export default function PayoutsPage() {
                     <span>-${(availableBalance * 0.01).toFixed(2)}</span>
                   </div>
                   <div className="border-t pt-2 flex justify-between">
-                    <span className="font-medium">You'll Receive</span>
+                    <span className="font-medium">You&apos;ll Receive</span>
                     <span className="font-semibold text-lg">
                       ${(availableBalance * 0.99).toFixed(2)}
                     </span>
