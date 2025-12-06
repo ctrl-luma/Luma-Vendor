@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 interface PerformanceScoreProps {
   score: number;
@@ -9,7 +9,15 @@ interface PerformanceScoreProps {
 
 export function PerformanceScore({ score, target }: PerformanceScoreProps) {
   const percentage = Math.min((score / target) * 100, 100);
-  const strokeDasharray = `${percentage} ${100 - percentage}`;
+  const [animatedPercentage, setAnimatedPercentage] = useState(0);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAnimatedPercentage(percentage);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [percentage]);
 
   return (
     <div className="dashboard-card p-4">
@@ -39,17 +47,16 @@ export function PerformanceScore({ score, target }: PerformanceScoreProps) {
             fill="none"
             stroke="currentColor"
             strokeWidth="12"
-            strokeDasharray={strokeDasharray}
             strokeDashoffset="25"
-            className="text-primary transition-all duration-500"
+            className="text-primary transition-all duration-1000 ease-out"
             style={{
-              strokeDasharray: `${percentage * 3.52} 352`,
+              strokeDasharray: `${animatedPercentage * 3.52} 352`,
             }}
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-2xl font-bold">{Math.round(percentage)}%</p>
+            <p className="text-2xl font-bold">{Math.round(animatedPercentage)}%</p>
             <p className="text-xs text-muted-foreground">of target</p>
           </div>
         </div>

@@ -6,17 +6,12 @@ import { MetricCard } from "@/components/dashboard/metrics-card";
 import { BalanceBanner } from "@/components/dashboard/balance-banner";
 import { PerformanceScore } from "@/components/dashboard/performance-score";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { MobileHeader } from "@/components/layout/mobile-header";
 
 export default function TodayPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
-      <header className="sticky top-0 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 dark:supports-[backdrop-filter]:bg-gray-950/85 border-b border-gray-200 dark:border-gray-800 md:hidden">
-        <div className="flex items-center justify-between px-4 h-14">
-          <h1 className="text-xl font-semibold">Today</h1>
-          <ThemeToggle />
-        </div>
-      </header>
+      <MobileHeader title="Today" />
 
       <main className="pb-20 md:pb-8 md:pt-8">
         <div className="md:max-w-7xl md:mx-auto md:px-4 lg:px-8">

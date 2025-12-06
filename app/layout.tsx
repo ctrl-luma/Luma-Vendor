@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/theme-provider'
+import { AuthProvider } from '@/components/providers/auth-provider'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { DesktopNav } from '@/components/layout/desktop-nav'
 
@@ -35,15 +36,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="hidden md:block">
-            <DesktopNav />
-          </div>
-          <div className="min-h-screen pb-16 md:pb-0">
+          <AuthProvider>
             {children}
-          </div>
-          <div className="md:hidden">
-            <MobileNav />
-          </div>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
