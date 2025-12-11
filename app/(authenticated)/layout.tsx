@@ -11,9 +11,9 @@ export default function AuthenticatedLayout({
 }) {
   return (
     <ProtectedRoute>
-      <div className="relative min-h-screen">
+      <div className="h-screen flex flex-col">
         <DesktopNav />
-        <div className="pb-16 md:pb-0 md:pt-16">
+        <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
           {children}
         </div>
         <div className="md:hidden">

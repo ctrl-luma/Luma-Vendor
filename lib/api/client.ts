@@ -4,9 +4,18 @@ type ApiError = {
   details?: any;
 };
 
+interface RequestQueueItem {
+  resolve: (value: any) => void;
+  reject: (reason?: any) => void;
+  request: () => Promise<any>;
+}
+
 class ApiClient {
   private baseURL: string;
   private defaultHeaders: HeadersInit;
+  private refreshPromise: Promise<any> | null = null;
+  private requestQueue: RequestQueueItem[] = [];
+  private isRefreshing = false;
 
   constructor() {
     this.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3334';
@@ -20,7 +29,71 @@ class ApiClient {
     return localStorage.getItem('accessToken');
   }
 
-  private async handleResponse<T>(response: Response, endpoint: string, retryCount: number = 0): Promise<T> {
+  private async processRequestQueue() {
+    this.requestQueue.forEach(async (queueItem) => {
+      try {
+        const result = await queueItem.request();
+        queueItem.resolve(result);
+      } catch (error) {
+        queueItem.reject(error);
+      }
+    });
+    this.requestQueue = [];
+  }
+
+  private async handleTokenRefresh(): Promise<boolean> {
+    if (this.isRefreshing) {
+      return new Promise((resolve, reject) => {
+        this.requestQueue.push({
+          resolve: () => resolve(true),
+          reject,
+          request: async () => true
+        });
+      });
+    }
+
+    this.isRefreshing = true;
+
+    if (!this.refreshPromise) {
+      this.refreshPromise = (async () => {
+        try {
+          const { authService } = await import('./auth');
+          const refreshToken = localStorage.getItem('refreshToken');
+          
+          if (!refreshToken) {
+            throw new Error('No refresh token available');
+          }
+
+          const tokens = await authService.refreshTokens();
+          
+          if (tokens) {
+            this.isRefreshing = false;
+            this.refreshPromise = null;
+            this.processRequestQueue();
+            return true;
+          } else {
+            throw new Error('Failed to refresh tokens');
+          }
+        } catch (error) {
+          this.isRefreshing = false;
+          this.refreshPromise = null;
+          this.requestQueue = [];
+          throw error;
+        }
+      })();
+    }
+
+    return this.refreshPromise;
+  }
+
+  private async handleResponse<T>(
+    response: Response, 
+    endpoint: string, 
+    retryCount: number = 0,
+    method?: string,
+    data?: any,
+    options?: RequestInit
+  ): Promise<T> {
     if (!response.ok) {
       const error: ApiError = {
         error: 'Request failed',
@@ -35,21 +108,20 @@ class ApiClient {
         error.error = `Request failed with status ${response.status}`;
       }
 
+      // Don't attempt refresh for auth endpoints
+      const authEndpoints = ['/auth/login', '/auth/refresh', '/auth/forgot-password', '/auth/reset-password'];
+      const isAuthEndpoint = authEndpoints.some(auth => endpoint.includes(auth));
+      
       // If we get a 401 and haven't retried yet, try to refresh the token
-      if (response.status === 401 && retryCount === 0 && endpoint !== '/auth/refresh') {
+      if (response.status === 401 && retryCount === 0 && !isAuthEndpoint) {
         try {
-          const { authService } = await import('./auth');
-          const refreshToken = localStorage.getItem('refreshToken');
-          
-          if (refreshToken) {
-            const tokens = await authService.refreshTokens();
-            if (tokens) {
-              // Retry the original request
-              return this.retryRequest<T>(endpoint, retryCount + 1);
-            }
+          const refreshed = await this.handleTokenRefresh();
+          if (refreshed) {
+            // Retry the original request with same method and data
+            return this.retryRequest<T>(endpoint, retryCount + 1, method, data, options);
           }
         } catch (refreshError) {
-          // Silently handle refresh error
+          // Refresh failed, throw the original error
         }
       }
 
@@ -63,14 +135,21 @@ class ApiClient {
     }
   }
 
-  private async retryRequest<T>(endpoint: string, retryCount: number): Promise<T> {
-    // This is a simplified retry - in practice, you'd want to store the original request details
+  private async retryRequest<T>(
+    endpoint: string, 
+    retryCount: number,
+    method: string = 'GET',
+    data?: any,
+    options?: RequestInit
+  ): Promise<T> {
     const response = await fetch(`${this.baseURL}${endpoint}`, {
-      method: 'GET',
-      headers: this.getHeaders(),
+      ...options,
+      method,
+      headers: this.getHeaders(options?.headers),
+      body: data ? JSON.stringify(data) : undefined,
     });
     
-    return this.handleResponse<T>(response, endpoint, retryCount);
+    return this.handleResponse<T>(response, endpoint, retryCount, method, data, options);
   }
 
   private getHeaders(customHeaders?: HeadersInit): HeadersInit {
@@ -87,60 +166,45 @@ class ApiClient {
     return headers;
   }
 
-  async get<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
-    const headers = this.getHeaders(options?.headers);
-    
-    const response = await fetch(url, {
+  private async makeRequest<T>(method: string, endpoint: string, data?: any, options?: RequestInit): Promise<T> {
+    if (this.isRefreshing && endpoint !== '/auth/refresh') {
+      return new Promise((resolve, reject) => {
+        this.requestQueue.push({
+          resolve,
+          reject,
+          request: () => this.makeRequest(method, endpoint, data, options)
+        });
+      });
+    }
+
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
       ...options,
-      method: 'GET',
-      headers,
+      method,
+      headers: this.getHeaders(options?.headers),
+      body: data ? JSON.stringify(data) : undefined,
     });
-    
-    return this.handleResponse<T>(response, endpoint);
+
+    return this.handleResponse<T>(response, endpoint, 0, method, data, options);
+  }
+
+  async get<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    return this.makeRequest<T>('GET', endpoint, undefined, options);
   }
 
   async post<T>(endpoint: string, data?: any, options?: RequestInit): Promise<T> {
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      ...options,
-      method: 'POST',
-      headers: this.getHeaders(options?.headers),
-      body: data ? JSON.stringify(data) : undefined,
-    });
-
-    return this.handleResponse<T>(response, endpoint);
+    return this.makeRequest<T>('POST', endpoint, data, options);
   }
 
   async put<T>(endpoint: string, data?: any, options?: RequestInit): Promise<T> {
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      ...options,
-      method: 'PUT',
-      headers: this.getHeaders(options?.headers),
-      body: data ? JSON.stringify(data) : undefined,
-    });
-
-    return this.handleResponse<T>(response, endpoint);
+    return this.makeRequest<T>('PUT', endpoint, data, options);
   }
 
   async delete<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      ...options,
-      method: 'DELETE',
-      headers: this.getHeaders(options?.headers),
-    });
-
-    return this.handleResponse<T>(response, endpoint);
+    return this.makeRequest<T>('DELETE', endpoint, undefined, options);
   }
 
   async patch<T>(endpoint: string, data?: any, options?: RequestInit): Promise<T> {
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
-      ...options,
-      method: 'PATCH',
-      headers: this.getHeaders(options?.headers),
-      body: data ? JSON.stringify(data) : undefined,
-    });
-
-    return this.handleResponse<T>(response, endpoint);
+    return this.makeRequest<T>('PATCH', endpoint, data, options);
   }
 }
 

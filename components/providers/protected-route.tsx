@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { authService } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,23 +10,15 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    const checkAuth = () => {
-      const isAuth = authService.isAuthenticated();
-      setIsAuthenticated(isAuth);
-      
-      if (!isAuth) {
-        router.push('/login');
-      }
-      
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, [router]);
+    console.log('[ProtectedRoute] isAuthenticated:', isAuthenticated, 'isLoading:', isLoading);
+    if (!isLoading && !isAuthenticated) {
+      console.log('[ProtectedRoute] User is not authenticated, redirecting to login');
+      router.push('/login');
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   if (isLoading) {
     return (

@@ -13,12 +13,17 @@ import {
   EyeOff,
   Save,
   Camera,
-  AlertCircle
+  AlertCircle,
+  Edit,
+  X,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { apiClient } from "@/lib/api/client";
+import { authService } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface FormData {
   firstName: string;
@@ -41,13 +46,20 @@ interface Organization {
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEditingOrg, setIsEditingOrg] = useState(false);
+  const [isSavingOrg, setIsSavingOrg] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [isLoadingOrg, setIsLoadingOrg] = useState(true);
+  const [originalData, setOriginalData] = useState<FormData | null>(null);
+  const [orgName, setOrgName] = useState("");
   
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
@@ -62,13 +74,26 @@ export default function ProfilePage() {
   // Update form data when user changes
   React.useEffect(() => {
     if (user) {
-      setFormData(prev => ({
-        ...prev,
+      const newData = {
         firstName: user.firstName || "",
         lastName: user.lastName || "",
         email: user.email || "",
-        phone: user.phone ? formatPhoneNumber(user.phone) : "",
-      }));
+        phone: user.phone ? formatPhoneNumber(user.phone, false) : "",
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      };
+      setFormData(newData);
+      setOriginalData(newData);
+
+      // Load notification settings
+      const newNotifications = {
+        emailAlerts: user.emailAlerts ?? false,
+        marketingEmails: user.marketingEmails ?? false,
+        weeklyReports: user.weeklyReports ?? false,
+      };
+      setNotifications(newNotifications);
+      setOriginalNotifications(newNotifications);
     }
   }, [user]);
 
@@ -83,6 +108,7 @@ export default function ProfilePage() {
       try {
         const data = await apiClient.get<Organization>(`/organizations/${user.organizationId}`);
         setOrganization(data);
+        setOrgName(data.name);
       } catch (error: any) {
         // Silently handle error
       } finally {
@@ -94,15 +120,21 @@ export default function ProfilePage() {
   }, [user]);
 
   const [notifications, setNotifications] = useState({
-    emailAlerts: true,
-    smsAlerts: false,
+    emailAlerts: false,
     marketingEmails: false,
-    weeklyReports: true,
+    weeklyReports: false,
   });
+  const [isSavingNotifications, setIsSavingNotifications] = useState(false);
+  const [originalNotifications, setOriginalNotifications] = useState<typeof notifications | null>(null);
 
-  const formatPhoneNumber = (value: string) => {
+  const formatPhoneNumber = (value: string, isDeleting: boolean = false) => {
     // Remove all non-numeric characters
     const cleaned = value.replace(/\D/g, '');
+    
+    // If deleting and the cleaned value is empty, return empty string
+    if (isDeleting && cleaned.length === 0) {
+      return '';
+    }
     
     // Apply US phone format
     let formatted = cleaned;
@@ -121,8 +153,29 @@ export default function ProfilePage() {
     const { name, value } = e.target;
     
     if (name === 'phone') {
-      // For phone input, format the value
-      const formattedPhone = formatPhoneNumber(value);
+      // Get the raw numeric value
+      const numericValue = value.replace(/\D/g, '');
+      
+      // Check if user is deleting (new value is shorter than old value)
+      const isDeleting = value.length < formData.phone.length;
+      
+      // If deleting and the last character was a formatting character, remove more digits
+      if (isDeleting) {
+        const lastChar = formData.phone[formData.phone.length - 1];
+        if (lastChar === ' ' || lastChar === '-' || lastChar === ')') {
+          // Remove one more digit
+          const shorterNumeric = numericValue.slice(0, -1);
+          const formatted = formatPhoneNumber(shorterNumeric, true);
+          setFormData(prev => ({
+            ...prev,
+            phone: formatted
+          }));
+          return;
+        }
+      }
+      
+      // Format normally
+      const formattedPhone = formatPhoneNumber(value, isDeleting);
       setFormData(prev => ({
         ...prev,
         phone: formattedPhone
@@ -135,16 +188,206 @@ export default function ProfilePage() {
     }
   };
 
-  const handleNotificationChange = (key: keyof typeof notifications) => {
+  const handleNotificationChange = async (key: keyof typeof notifications) => {
+    const newValue = !notifications[key];
+    
+    // Update local state immediately for UI responsiveness
     setNotifications(prev => ({
       ...prev,
-      [key]: !prev[key]
+      [key]: newValue
     }));
+
+    setIsSavingNotifications(true);
+    
+    try {
+      // Send update to backend
+      const updatedPrefs = await authService.updateNotificationPreferences({
+        [key]: newValue
+      });
+      
+      // The API returns only the notification preferences, not the full user
+      
+      toast({
+        title: "Notification preference updated",
+        description: "Your notification settings have been saved.",
+        variant: "success",
+      });
+    } catch (error: any) {
+      console.error('[Profile] Notification update error:', error);
+      
+      // Revert on error
+      setNotifications(prev => ({
+        ...prev,
+        [key]: !newValue
+      }));
+      
+      toast({
+        title: "Update failed",
+        description: error.error || error.message || "Failed to update notification preferences",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingNotifications(false);
+    }
   };
 
-  const handleSave = () => {
-    // Here you would make API calls to update the profile
+  const handleEditClick = () => {
+    setIsEditing(true);
+    setOriginalData({ ...formData });
+  };
+
+  const handleCancel = () => {
     setIsEditing(false);
+    if (originalData) {
+      setFormData(originalData);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (formData.newPassword !== formData.confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Please make sure the passwords match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate password requirements
+    const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])(?=.*[a-z])(?=.*[A-Z]).+$/;
+    if (!passwordRegex.test(formData.newPassword)) {
+      toast({
+        title: "Invalid password",
+        description: "Password must contain at least 1 number, 1 special character, 1 uppercase letter, and 1 lowercase letter.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsChangingPassword(true);
+    
+    try {
+      await apiClient.post('/auth/change-password', {
+        newPassword: formData.newPassword,
+      });
+      
+      toast({
+        title: "Password updated",
+        description: "Your password has been changed successfully.",
+      });
+      
+      // Clear password fields
+      setFormData(prev => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
+    } catch (error: any) {
+      toast({
+        title: "Password change failed",
+        description: error.error || "Failed to change password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handleOrgEdit = () => {
+    setIsEditingOrg(true);
+  };
+
+  const handleOrgCancel = () => {
+    setIsEditingOrg(false);
+    setOrgName(organization?.name || '');
+  };
+
+  const handleOrgSave = async () => {
+    if (!organization || !user) return;
+    
+    setIsSavingOrg(true);
+    
+    try {
+      const updatedOrg = await apiClient.put<Organization>(
+        `/organizations/${organization.id}`,
+        { name: orgName }
+      );
+      
+      setOrganization(updatedOrg);
+      setIsEditingOrg(false);
+      
+      toast({
+        title: "Organization updated",
+        description: "Organization name has been updated successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Update failed",
+        description: error.error || "Failed to update organization",
+        variant: "destructive",
+      });
+      // Reset to original name on error
+      setOrgName(organization.name);
+    } finally {
+      setIsSavingOrg(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    
+    try {
+      // Prepare the update data
+      const updateData: any = {};
+      
+      if (formData.firstName !== originalData?.firstName) {
+        updateData.firstName = formData.firstName;
+      }
+      
+      if (formData.lastName !== originalData?.lastName) {
+        updateData.lastName = formData.lastName;
+      }
+      
+      if (formData.phone !== originalData?.phone) {
+        // Strip formatting from phone number
+        const cleanPhone = formData.phone.replace(/\D/g, '');
+        if (cleanPhone.length === 10) {
+          updateData.phone = cleanPhone;
+        } else if (cleanPhone.length > 0) {
+          toast({
+            title: "Invalid phone number",
+            description: "Phone number must be 10 digits",
+            variant: "destructive",
+          });
+          setIsSaving(false);
+          return;
+        }
+      }
+      
+      // Only send request if there are changes
+      if (Object.keys(updateData).length > 0) {
+        const response = await apiClient.patch('/auth/profile', updateData);
+        
+        // Update the user in auth context
+        await refreshUser();
+        
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been updated successfully.",
+        });
+      }
+      
+      setIsEditing(false);
+    } catch (error: any) {
+      toast({
+        title: "Update failed",
+        description: error.error || "Failed to update profile",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Avatar gradient
@@ -155,10 +398,10 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
+    <div className="bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
       <MobileHeader title="Profile" />
       
-      <main className="pb-20 md:pb-8 md:pt-8">
+      <main className="pb-20 md:pb-8 md:pt-8 min-h-full">
         <div className="md:max-w-3xl md:mx-auto px-4 md:px-4 lg:px-8 space-y-8">
           {/* Profile Header */}
           <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
@@ -181,23 +424,51 @@ export default function ProfilePage() {
                   Member since December 2024
                 </p>
               </div>
-              
-              <Button
-                onClick={() => setIsEditing(!isEditing)}
-                variant={isEditing ? "outline" : "default"}
-              >
-                {isEditing ? "Cancel" : "Edit Profile"}
-              </Button>
             </div>
           </div>
 
           {/* Personal Information */}
           <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 <User className="h-5 w-5" />
                 Personal Information
               </h2>
+              {!isEditing ? (
+                <Button
+                  onClick={handleEditClick}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleCancel}
+                    variant="outline"
+                    size="sm"
+                    disabled={isSaving}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    size="sm"
+                    disabled={isSaving}
+                    className="flex items-center gap-2"
+                  >
+                    {isSaving ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    Save
+                  </Button>
+                </div>
+              )}
             </div>
             
             <div className="p-6 space-y-6">
@@ -244,20 +515,18 @@ export default function ProfilePage() {
                   <Mail className="h-4 w-4" />
                   Email Address
                 </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className={cn(
-                    "w-full px-3 py-2 border rounded-lg transition-colors",
-                    "dark:bg-gray-800 dark:border-gray-700",
-                    isEditing 
-                      ? "border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                      : "bg-gray-50 dark:bg-gray-800/50 cursor-not-allowed"
-                  )}
-                />
+                <div className="relative">
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    disabled
+                    className="w-full px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-800/50 cursor-not-allowed dark:border-gray-700 text-gray-600 dark:text-gray-400"
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Locked</span>
+                  </div>
+                </div>
               </div>
               
               <div>
@@ -285,14 +554,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {isEditing && (
-                <div className="flex justify-end pt-4">
-                  <Button onClick={handleSave} className="flex items-center gap-2">
-                    <Save className="h-4 w-4" />
-                    Save Changes
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
 
@@ -312,35 +573,16 @@ export default function ProfilePage() {
                   <div className="text-sm">
                     <p className="font-medium text-blue-900 dark:text-blue-100">Password Requirements</p>
                     <ul className="mt-1 text-blue-700 dark:text-blue-300 space-y-1">
-                      <li>• At least 8 characters long</li>
-                      <li>• Include uppercase and lowercase letters</li>
-                      <li>• Include at least one number</li>
+                      <li>• Contains at least 1 number</li>
+                      <li>• Contains at least 1 special character</li>
+                      <li>• Contains at least 1 uppercase letter</li>
+                      <li>• Contains at least 1 lowercase letter</li>
                     </ul>
                   </div>
                 </div>
               </div>
               
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Current Password</label>
-                  <div className="relative">
-                    <input
-                      type={showCurrentPassword ? "text" : "password"}
-                      name="currentPassword"
-                      value={formData.currentPassword}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                    >
-                      {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-                
                 <div>
                   <label className="block text-sm font-medium mb-2">New Password</label>
                   <div className="relative">
@@ -349,6 +591,7 @@ export default function ProfilePage() {
                       name="newPassword"
                       value={formData.newPassword}
                       onChange={handleInputChange}
+                      autoComplete="new-password"
                       className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     />
                     <button
@@ -363,27 +606,31 @@ export default function ProfilePage() {
                 
                 <div>
                   <label className="block text-sm font-medium mb-2">Confirm New Password</label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                    >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    autoComplete="new-password"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
                 </div>
               </div>
               
-              <Button variant="outline" className="w-full md:w-auto">
-                Update Password
+              <Button 
+                variant="outline" 
+                className="w-full md:w-auto"
+                onClick={handlePasswordChange}
+                disabled={!formData.newPassword || !formData.confirmPassword || isChangingPassword}
+              >
+                {isChangingPassword ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update Password"
+                )}
               </Button>
             </div>
           </div>
@@ -403,22 +650,22 @@ export default function ProfilePage() {
                   <div>
                     <p className="font-medium">
                       {key === 'emailAlerts' && 'Email Alerts'}
-                      {key === 'smsAlerts' && 'SMS Notifications'}
                       {key === 'marketingEmails' && 'Marketing Emails'}
                       {key === 'weeklyReports' && 'Weekly Reports'}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {key === 'emailAlerts' && 'Receive important updates via email'}
-                      {key === 'smsAlerts' && 'Get text messages for urgent notifications'}
                       {key === 'marketingEmails' && 'Stay updated with our latest features and offers'}
                       {key === 'weeklyReports' && 'Get weekly summary of your business performance'}
                     </p>
                   </div>
                   <button
                     onClick={() => handleNotificationChange(key as keyof typeof notifications)}
+                    disabled={isSavingNotifications}
                     className={cn(
                       "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                      value ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-700"
+                      value ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-700",
+                      isSavingNotifications && "opacity-50 cursor-not-allowed"
                     )}
                   >
                     <span
@@ -435,11 +682,48 @@ export default function ProfilePage() {
 
           {/* Organization */}
           <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 <Building className="h-5 w-5" />
                 Organization
               </h2>
+              {user?.role === 'owner' || user?.role === 'admin' ? (
+                !isEditingOrg ? (
+                  <Button
+                    onClick={handleOrgEdit}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleOrgCancel}
+                      variant="outline"
+                      size="sm"
+                      disabled={isSavingOrg}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleOrgSave}
+                      size="sm"
+                      disabled={isSavingOrg || !orgName.trim()}
+                      className="flex items-center gap-2"
+                    >
+                      {isSavingOrg ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="h-4 w-4" />
+                      )}
+                      Save
+                    </Button>
+                  </div>
+                )
+              ) : null}
             </div>
             
             <div className="p-6 space-y-4">
@@ -452,8 +736,18 @@ export default function ProfilePage() {
               ) : (
                 <>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Organization Name</p>
-                    <p className="font-medium">{organization?.name || 'N/A'}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Organization Name</p>
+                    {isEditingOrg ? (
+                      <input
+                        type="text"
+                        value={orgName}
+                        onChange={(e) => setOrgName(e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        placeholder="Enter organization name"
+                      />
+                    ) : (
+                      <p className="font-medium">{organization?.name || 'N/A'}</p>
+                    )}
                   </div>
                   
                   <div>
@@ -489,11 +783,8 @@ export default function ProfilePage() {
               Danger Zone
             </h3>
             <p className="text-sm text-red-700 dark:text-red-300 mb-4">
-              Once you delete your account, there is no going back. Please be certain.
+              To delete your account, please contact our support team at <a href="mailto:support@lumapos.co" className="underline font-medium">support@lumapos.co</a>
             </p>
-            <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20">
-              Delete Account
-            </Button>
           </div>
         </div>
       </main>

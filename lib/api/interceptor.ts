@@ -14,7 +14,11 @@ export function setupAuthInterceptor() {
     if (response.status === 401 && !isRefreshing) {
       const url = input instanceof Request ? input.url : input.toString();
       
-      if (!url.includes('/auth/refresh') && !url.includes('/auth/login')) {
+      // Don't attempt refresh for auth endpoints
+      const authEndpoints = ['/auth/refresh', '/auth/login', '/auth/forgot-password', '/auth/reset-password'];
+      const isAuthEndpoint = authEndpoints.some(endpoint => url.includes(endpoint));
+      
+      if (!isAuthEndpoint) {
         isRefreshing = true;
 
         if (!refreshPromise) {

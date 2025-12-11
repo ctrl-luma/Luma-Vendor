@@ -7,19 +7,51 @@ import { BalanceBanner } from "@/components/dashboard/balance-banner";
 import { PerformanceScore } from "@/components/dashboard/performance-score";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { MobileHeader } from "@/components/layout/mobile-header";
+import { ConnectOnboarding } from "@/components/stripe/connect-onboarding";
+import { useStripeConnect } from "@/contexts/StripeConnectContext";
 
 export default function TodayPage() {
+  const { isOnboarded, isLoading } = useStripeConnect();
+
+  // Show onboarding flow if user hasn't completed Stripe Connect setup
+  if (!isLoading && !isOnboarded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
+        <MobileHeader title="Get Started" />
+
+        <main className="pb-20 md:pb-8 md:pt-8">
+          <div className="max-w-3xl mx-auto px-4 md:px-4 lg:px-8">
+            <ConnectOnboarding />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show loading state while checking onboarding status
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
+        <MobileHeader title="Today" />
+        <main className="pb-20 md:pb-8 md:pt-8 flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show normal dashboard for onboarded users
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
+    <div className="bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
       <MobileHeader title="Today" />
 
-      <main className="pb-20 md:pb-8 md:pt-8">
+      <main className="pb-20 md:pb-8 md:pt-8 min-h-full">
         <div className="md:max-w-7xl md:mx-auto md:px-4 lg:px-8">
           <QuickActions />
-        
+
         <div className="px-4 space-y-4">
           <BalanceBanner />
-          
+
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:gap-4">
             <MetricCard
               title="Today's Sales"

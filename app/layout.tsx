@@ -5,13 +5,24 @@ import { ThemeProvider } from '@/components/providers/theme-provider'
 import { AuthProvider } from '@/components/providers/auth-provider'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { DesktopNav } from '@/components/layout/desktop-nav'
+import { Toaster } from 'sonner'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Luma Dashboard',
   description: 'Dashboard for event vendors and mobile merchants',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/luma-icon-512x512.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Luma',
+  },
 }
 
 export const viewport: Viewport = {
@@ -38,6 +49,18 @@ export default function RootLayout({
         >
           <AuthProvider>
             {children}
+            <Toaster 
+              position="top-left" 
+              expand={false}
+              richColors
+              theme="dark"
+              toastOptions={{
+                style: {
+                  marginTop: '64px',
+                },
+                className: 'animate-slide-in-left',
+              }}
+            />
           </AuthProvider>
         </ThemeProvider>
       </body>

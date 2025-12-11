@@ -1,127 +1,184 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Roboto+Mono:wght@400;500;600&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 213 94% 68%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 214 32% 91%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 213 27% 94%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 217 91% 95%;
-    --accent-foreground: 217 91% 25%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 213 94% 68%;
-    --radius: 0.5rem;
-  }
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
 
-  .dark {
-    --background: 222 47% 5%;
-    --foreground: 213 31% 91%;
-    --card: 224 71% 8%;
-    --card-foreground: 213 31% 91%;
-    --popover: 224 71% 8%;
-    --popover-foreground: 213 31% 91%;
-    --primary: 217 91% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 222 47% 15%;
-    --secondary-foreground: 213 31% 91%;
-    --muted: 223 47% 15%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 224 71% 12%;
-    --accent-foreground: 213 31% 91%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 224 71% 16%;
-    --input: 224 71% 16%;
-    --ring: 217 91% 50%;
-  }
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
-  
-  body {
-    background-color: hsl(var(--background));
-    background-image: 
-      radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.03) 0%, transparent 40%),
-      radial-gradient(ellipse at bottom right, rgba(147, 197, 253, 0.05) 0%, transparent 40%);
-  }
-  
-  .dark body {
-    background-image: 
-      radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-      radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
-  }
-}
+@theme {
+  --radius: 0.5rem;
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
 
-@layer components {
-  .dashboard-card {
-    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
-    @apply bg-white dark:bg-gray-900/50 backdrop-blur-sm;
-    @apply border-gray-200 dark:border-gray-800;
-    @apply shadow-sm hover:shadow-md transition-shadow;
-  }
-  
-  .dashboard-stat {
-    @apply flex flex-col space-y-1.5 p-6;
-  }
-  
-  .tab-item {
-    @apply flex flex-col items-center justify-center gap-1 py-2 text-xs font-medium transition-colors;
-  }
-  
-  .tab-item-active {
-    @apply text-primary;
-  }
-}
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93bbfc;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+  --color-blue-950: #172554;
 
-@layer utilities {
-  .tap-highlight-transparent {
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  
-  .safe-top {
-    padding-top: env(safe-area-inset-top);
-  }
-  
-  @keyframes barGrow {
-    from {
-      height: 0;
-    }
-  }
-  
-  @keyframes lineChart {
-    to {
-      stroke-dashoffset: 0;
-    }
-  }
-  
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+
+  --animate-fade-in: fadeIn 0.5s ease-in-out;
+  --animate-fade-up: fadeUp 0.5s ease-out;
+  --animate-slide-in: slideIn 0.3s ease-out;
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-slide-in-left: slide-in-left 0.3s ease-out;
+
   @keyframes fadeIn {
-    to {
-      opacity: 1;
-    }
+    0% { opacity: 0; }
+    100% { opacity: 1; }
   }
+  @keyframes fadeUp {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideIn {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(0); }
+  }
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+  @keyframes slide-in-left {
+    from { transform: translateX(-100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes barGrow {
+    from { height: 0; }
+  }
+  @keyframes lineChart {
+    to { stroke-dashoffset: 0; }
+  }
+}
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 224 71.4% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 224 71.4% 4.1%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 71.4% 4.1%;
+  --primary: 213 94% 68%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 214 32% 91%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 213 27% 94%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 217 91% 95%;
+  --accent-foreground: 217 91% 25%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 213 94% 68%;
+}
+
+.dark {
+  --background: 222 47% 5%;
+  --foreground: 213 31% 91%;
+  --card: 224 71% 8%;
+  --card-foreground: 213 31% 91%;
+  --popover: 224 71% 8%;
+  --popover-foreground: 213 31% 91%;
+  --primary: 217 91% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 222 47% 15%;
+  --secondary-foreground: 213 31% 91%;
+  --muted: 223 47% 15%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 224 71% 12%;
+  --accent-foreground: 213 31% 91%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 224 71% 16%;
+  --input: 224 71% 16%;
+  --ring: 217 91% 50%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  background-image:
+    radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.03) 0%, transparent 40%),
+    radial-gradient(ellipse at bottom right, rgba(147, 197, 253, 0.05) 0%, transparent 40%);
+}
+
+.dark body {
+  background-image:
+    radial-gradient(ellipse at top left, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+}
+
+@utility tap-highlight-transparent {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.dashboard-card {
+  @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  @apply bg-white dark:bg-gray-900/50 backdrop-blur-sm;
+  @apply border-gray-200 dark:border-gray-800;
+  @apply shadow-sm hover:shadow-md transition-shadow;
+}
+
+.dashboard-stat {
+  @apply flex flex-col gap-1.5 p-6;
+}
+
+.tab-item {
+  @apply flex flex-col items-center justify-center gap-1 py-2 text-xs font-medium transition-colors;
+}
+
+.tab-item-active {
+  @apply text-primary;
 }
