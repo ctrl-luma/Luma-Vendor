@@ -18,7 +18,7 @@ const tabs = [
     name: "Today",
     href: "/",
     icon: HomeIcon,
-    requiresOnboarding: false,
+    requiresOnboarding: true,
   },
   {
     name: "Sales",

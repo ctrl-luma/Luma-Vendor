@@ -13,7 +13,7 @@ export default function AuthenticatedLayout({
     <ProtectedRoute>
       <div className="h-screen flex flex-col">
         <DesktopNav />
-        <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
+        <div className="flex-1 overflow-auto pb-16 md:pb-0">
           {children}
         </div>
         <div className="md:hidden">

@@ -78,11 +78,17 @@ export default function LoginPage() {
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-md px-6"
       >
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-2xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 px-8 pt-8 pb-8">
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent mb-2">
-              Welcome Back
-            </h1>
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-2xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 px-8 pb-8">
+          <div className="mb-4 text-center">
+            <div className="flex justify-center">
+              <img
+                src="/luma-icon-512x512.png"
+                alt="Luma"
+                width={150}
+                height={150}
+                className="rounded-xl"
+              />
+            </div>
             <p className="text-gray-600 dark:text-gray-400">
               Sign in to access your vendor dashboard
             </p>

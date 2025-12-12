@@ -57,9 +57,9 @@ export default function ConnectPage() {
   // Show onboarding if not completed
   if (!isLoading && !isOnboarded) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
+      <div className="min-h-full bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
         <MobileHeader title="Payment Account" />
-        <main className="pb-20 md:pb-8 md:pt-8">
+        <main className="pb-4 md:pb-8 md:pt-8">
           <div className="max-w-3xl mx-auto px-4 md:px-4 lg:px-8">
             <ConnectOnboarding />
           </div>
@@ -71,9 +71,9 @@ export default function ConnectPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
+      <div className="min-h-full bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
         <MobileHeader title="Payment Account" />
-        <main className="pb-20 md:pb-8 md:pt-8 flex items-center justify-center min-h-[50vh]">
+        <main className="pb-4 md:pb-8 md:pt-8 flex items-center justify-center min-h-[50vh]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </main>
       </div>
@@ -114,10 +114,10 @@ export default function ConnectPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
+    <div className="min-h-full bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
       <MobileHeader title="Payment Account" />
 
-      <main className="pb-20 md:pb-8 md:pt-8">
+      <main className="pb-4 md:pb-8 md:pt-8">
         <div className="md:max-w-4xl md:mx-auto px-4 md:px-4 lg:px-8 space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

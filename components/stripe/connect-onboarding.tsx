@@ -122,12 +122,15 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
             <Building2 className="h-8 w-8 text-primary" />
           </div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full mb-2">
+            <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+            First Step
+          </div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
             Set Up Your Payment Account
           </h1>
           <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-            Connect your business to start accepting payments and receiving payouts
-            from your events.
+            Before you can customize your app and start taking payments, you&apos;ll need to connect your business account.
           </p>
         </div>
 
