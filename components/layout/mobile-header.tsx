@@ -15,11 +15,11 @@ export function MobileHeader({ title, className }: MobileHeaderProps) {
 
   return (
     <header className={cn(
-      "sticky top-0 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 dark:supports-[backdrop-filter]:bg-gray-950/85 border-b border-gray-200 dark:border-gray-800 md:hidden",
+      "sticky top-0 z-40 bg-gray-950/95 backdrop-blur-sm border-b border-gray-800 md:hidden",
       className
     )}>
       <div className="flex items-center justify-between px-4 h-14">
-        <h1 className="text-xl font-semibold">{title}</h1>
+        <h1 className="text-xl font-semibold text-white">{title}</h1>
         <UserDropdown user={user} logout={logout} />
       </div>
     </header>

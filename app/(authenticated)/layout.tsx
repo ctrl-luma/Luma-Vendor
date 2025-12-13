@@ -11,9 +11,15 @@ export default function AuthenticatedLayout({
 }) {
   return (
     <ProtectedRoute>
-      <div className="h-screen flex flex-col">
+      <div className="relative min-h-screen flex flex-col">
+        {/* Top glow effect - matches marketing site */}
+        <div className="absolute top-0 left-0 right-0 z-[60] pointer-events-none hidden md:block">
+          <div className="h-px bg-gradient-to-r from-transparent via-primary-500 to-transparent" />
+        </div>
+        <div className="absolute top-0 left-0 right-0 h-[150px] bg-gradient-to-b from-primary/20 via-primary/5 to-transparent z-30 pointer-events-none hidden md:block" />
+
         <DesktopNav />
-        <div className="flex-1 overflow-auto pb-16 md:pb-0">
+        <div className="flex-1 pb-16 md:pb-0 md:pt-20">
           {children}
         </div>
         <div className="md:hidden">

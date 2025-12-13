@@ -5,10 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { authService } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setAuthFromCallback } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState('');
 
@@ -57,10 +59,11 @@ export default function AuthCallbackContent() {
           throw new Error('Missing authentication tokens');
         }
 
-        // Store user data first if provided
+        // Parse user data
+        let userData = null;
         if (user) {
           try {
-            const userData = JSON.parse(decodeURIComponent(user));
+            userData = JSON.parse(decodeURIComponent(user));
             console.log('[AuthCallback] Parsed user data:', userData);
             authService.saveUser(userData);
           } catch (e) {
@@ -75,6 +78,12 @@ export default function AuthCallbackContent() {
 
         if (!isValid) {
           throw new Error('Invalid authentication tokens');
+        }
+
+        // Update AuthContext with the user data
+        if (userData) {
+          console.log('[AuthCallback] Updating AuthContext with user data');
+          setAuthFromCallback(userData);
         }
 
         setStatus('success');
@@ -99,26 +108,30 @@ export default function AuthCallbackContent() {
     };
 
     handleAuthCallback();
-  }, [searchParams, router, status]);
+  }, [searchParams, router, status, setAuthFromCallback]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" />
-      
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gray-950">
+      {/* Background decorations */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/20 rounded-full blur-[100px]" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/10 rounded-full blur-[100px]" />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-md px-6"
       >
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-2xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-8 text-center">
+        <div className="card p-8 text-center">
           {status === 'loading' && (
             <>
-              <Loader2 className="w-16 h-16 text-blue-500 animate-spin mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <Loader2 className="w-16 h-16 text-primary animate-spin mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-white mb-2">
                 Authenticating...
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-400">
                 Please wait while we log you in
               </p>
             </>
@@ -134,10 +147,10 @@ export default function AuthCallbackContent() {
               >
                 <CheckCircle className="w-10 h-10 text-white" />
               </motion.div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <h2 className="text-xl font-semibold text-white mb-2">
                 Authentication Successful
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-400">
                 Redirecting to your dashboard...
               </p>
             </>
@@ -153,13 +166,13 @@ export default function AuthCallbackContent() {
               >
                 <XCircle className="w-10 h-10 text-white" />
               </motion.div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <h2 className="text-xl font-semibold text-white mb-2">
                 Authentication Failed
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-2">
+              <p className="text-gray-400 mb-2">
                 {error}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-500">
+              <p className="text-sm text-gray-500">
                 Redirecting to login...
               </p>
             </>

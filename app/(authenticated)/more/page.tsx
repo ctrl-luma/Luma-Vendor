@@ -63,7 +63,7 @@ export default function MorePage() {
         </div>
       </header>
 
-      <main className="pb-20 md:pb-8 md:pt-8">
+      <main className="pb-20 md:pb-8">
         <div className="md:max-w-7xl md:mx-auto md:px-4 lg:px-8">
         <div className="px-4 py-4">
           <div className="dashboard-card p-4 mb-4">

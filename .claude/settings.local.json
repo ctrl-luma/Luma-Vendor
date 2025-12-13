@@ -20,7 +20,8 @@
       "Bash(. \"$NVM_DIR/nvm.sh\")",
       "Bash(nvm install:*)",
       "Bash(nvm use:*)",
-      "Bash(npm info:*)"
+      "Bash(npm info:*)",
+      "WebSearch"
     ],
     "deny": []
   }

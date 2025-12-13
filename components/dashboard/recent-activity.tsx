@@ -52,44 +52,44 @@ const mockTransactions: Transaction[] = [
 
 export function RecentActivity() {
   return (
-    <div className="dashboard-card">
-      <div className="p-4 border-b">
-        <h3 className="font-medium">Recent Activity</h3>
+    <div className="card overflow-hidden">
+      <div className="p-4 border-b border-gray-800">
+        <h3 className="font-medium text-white">Recent Activity</h3>
       </div>
-      <div className="divide-y">
+      <div className="divide-y divide-gray-800">
         {mockTransactions.map((transaction) => (
           <div key={transaction.id} className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={cn(
                 "h-8 w-8 rounded-full flex items-center justify-center",
-                transaction.status === "completed" && "bg-green-100",
-                transaction.status === "pending" && "bg-yellow-100",
-                transaction.status === "failed" && "bg-red-100"
+                transaction.status === "completed" && "bg-green-500/20",
+                transaction.status === "pending" && "bg-yellow-500/20",
+                transaction.status === "failed" && "bg-red-500/20"
               )}>
                 {transaction.status === "completed" && (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <CheckCircle className="h-4 w-4 text-green-400" />
                 )}
                 {transaction.status === "pending" && (
-                  <Clock className="h-4 w-4 text-yellow-600" />
+                  <Clock className="h-4 w-4 text-yellow-400" />
                 )}
                 {transaction.status === "failed" && (
-                  <XCircle className="h-4 w-4 text-red-600" />
+                  <XCircle className="h-4 w-4 text-red-400" />
                 )}
               </div>
               <div>
-                <p className="font-medium text-sm">{transaction.customerName}</p>
-                <p className="text-xs text-muted-foreground">{transaction.time}</p>
+                <p className="font-medium text-sm text-white">{transaction.customerName}</p>
+                <p className="text-xs text-gray-500">{transaction.time}</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="font-semibold">
+              <p className="font-semibold text-white">
                 ${transaction.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
               </p>
               <p className={cn(
-                "text-xs",
-                transaction.status === "completed" && "text-green-600",
-                transaction.status === "pending" && "text-yellow-600",
-                transaction.status === "failed" && "text-red-600"
+                "text-xs capitalize",
+                transaction.status === "completed" && "text-green-400",
+                transaction.status === "pending" && "text-yellow-400",
+                transaction.status === "failed" && "text-red-400"
               )}>
                 {transaction.status}
               </p>

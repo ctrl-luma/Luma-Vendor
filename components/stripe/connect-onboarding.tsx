@@ -13,10 +13,8 @@ import {
   RefreshCw,
   ExternalLink,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useStripeConnect } from "@/contexts/StripeConnectContext";
-import { ConnectOnboardingState } from "@/lib/api/stripe-connect";
 
 const benefits = [
   {
@@ -119,17 +117,17 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
       <div className={cn("space-y-8", className)}>
         {/* Hero Section */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/20 rounded-full mb-4">
             <Building2 className="h-8 w-8 text-primary" />
           </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full mb-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/20 text-primary text-sm font-medium rounded-full mb-2">
             <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
             First Step
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl md:text-3xl font-bold text-white">
             Set Up Your Payment Account
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+          <p className="text-gray-400 max-w-md mx-auto">
             Before you can customize your app and start taking payments, you&apos;ll need to connect your business account.
           </p>
         </div>
@@ -141,17 +139,17 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
             return (
               <div
                 key={benefit.title}
-                className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800"
+                className="card p-6"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-primary/10 rounded-lg">
+                  <div className="p-2 bg-primary/20 rounded-lg">
                     <Icon className="h-5 w-5 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                  <h3 className="font-semibold text-white">
                     {benefit.title}
                   </h3>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-400">
                   {benefit.description}
                 </p>
               </div>
@@ -160,28 +158,28 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
         </div>
 
         {/* Steps Preview */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="card p-6">
+          <h3 className="font-semibold text-white mb-4">
             What you&apos;ll need
           </h3>
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
             {steps.map((step, index) => (
               <div key={step.number} className="flex items-center gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-sm font-medium">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-800 text-gray-400 text-sm font-medium">
                     {step.number}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white text-sm">
+                    <p className="font-medium text-white text-sm">
                       {step.title}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500">
+                    <p className="text-xs text-gray-500">
                       {step.description}
                     </p>
                   </div>
                 </div>
                 {index < steps.length - 1 && (
-                  <ArrowRight className="h-4 w-4 text-gray-300 dark:text-gray-700 hidden md:block" />
+                  <ArrowRight className="h-4 w-4 text-gray-700 hidden md:block" />
                 )}
               </div>
             ))}
@@ -190,11 +188,10 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
 
         {/* CTA */}
         <div className="flex flex-col items-center gap-4">
-          <Button
-            size="lg"
+          <button
             onClick={handleStartOnboarding}
             disabled={isStarting}
-            className="w-full md:w-auto min-w-[200px]"
+            className="btn-primary w-full md:w-auto min-w-[200px]"
           >
             {isStarting ? (
               <>
@@ -207,8 +204,8 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
                 <ArrowRight className="h-4 w-4 ml-2" />
               </>
             )}
-          </Button>
-          <p className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
+          </button>
+          <p className="text-xs text-gray-500 flex items-center gap-1">
             <Shield className="h-3 w-3" />
             Secured by Stripe. Your information is encrypted.
           </p>
@@ -224,27 +221,27 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
 
     return (
       <div className={cn("space-y-6", className)}>
-        <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800">
+        <div className="card p-6">
           <div className="flex items-start gap-4">
             <div className={cn(
               "p-3 rounded-full",
               isPendingVerification
-                ? "bg-blue-100 dark:bg-blue-900/20"
-                : "bg-amber-100 dark:bg-amber-900/20"
+                ? "bg-blue-500/20"
+                : "bg-amber-500/20"
             )}>
               {isPendingVerification ? (
-                <Clock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <Clock className="h-6 w-6 text-blue-400" />
               ) : (
-                <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                <AlertCircle className="h-6 w-6 text-amber-400" />
               )}
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+              <h2 className="text-xl font-semibold text-white mb-1">
                 {isPendingVerification
                   ? "Verification in Progress"
                   : "Complete Your Setup"}
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-gray-400 mb-4">
                 {isPendingVerification
                   ? "We're reviewing your information. This usually takes a few minutes."
                   : requirementsCount > 0
@@ -253,9 +250,10 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
               </p>
 
               <div className="flex flex-wrap gap-3">
-                <Button
+                <button
                   onClick={handleContinueOnboarding}
                   disabled={isContinuing}
+                  className="btn-primary"
                 >
                   {isContinuing ? (
                     <>
@@ -268,25 +266,25 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
                       <ExternalLink className="h-4 w-4 ml-2" />
                     </>
                   )}
-                </Button>
-                <Button
-                  variant="outline"
+                </button>
+                <button
                   onClick={handleRefreshStatus}
                   disabled={isRefreshing}
+                  className="btn-secondary !px-4"
                 >
                   {isRefreshing ? (
                     <RefreshCw className="h-4 w-4 animate-spin" />
                   ) : (
                     <RefreshCw className="h-4 w-4" />
                   )}
-                </Button>
+                </button>
               </div>
             </div>
           </div>
         </div>
 
         {/* Progress indicator */}
-        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-200 dark:border-gray-800">
+        <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
           <div className="flex items-center gap-3">
             {[1, 2, 3].map((step) => {
               const isCompleted = step === 1 || (step === 2 && connectStatus?.detailsSubmitted);
@@ -298,10 +296,10 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
                     className={cn(
                       "flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors",
                       isCompleted
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                        ? "bg-green-500/20 text-green-400"
                         : isCurrent
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-500"
+                        ? "bg-primary text-white"
+                        : "bg-gray-800 text-gray-500"
                     )}
                   >
                     {isCompleted ? (
@@ -315,8 +313,8 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
                       className={cn(
                         "flex-1 h-1 rounded-full",
                         isCompleted
-                          ? "bg-green-200 dark:bg-green-900/40"
-                          : "bg-gray-200 dark:bg-gray-800"
+                          ? "bg-green-500/40"
+                          : "bg-gray-800"
                       )}
                     />
                   )}
@@ -340,27 +338,27 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
 
     return (
       <div className={cn("space-y-6", className)}>
-        <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-red-200 dark:border-red-800">
+        <div className="card p-6 border-red-500/20">
           <div className="flex items-start gap-4">
-            <div className="p-3 rounded-full bg-red-100 dark:bg-red-900/20">
-              <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+            <div className="p-3 rounded-full bg-red-500/20">
+              <AlertCircle className="h-6 w-6 text-red-400" />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+              <h2 className="text-xl font-semibold text-white mb-1">
                 {isDisabled ? "Account Disabled" : "Action Required"}
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-gray-400 mb-4">
                 {isDisabled
                   ? connectStatus?.disabledReason || "Your account has been disabled. Please contact support."
                   : "Your account has some past due requirements that need attention."}
               </p>
 
               {connectStatus?.requirementsPastDue && connectStatus.requirementsPastDue.length > 0 && (
-                <div className="bg-red-50 dark:bg-red-900/10 rounded-lg p-3 mb-4">
-                  <p className="text-sm font-medium text-red-700 dark:text-red-400 mb-2">
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4">
+                  <p className="text-sm font-medium text-red-400 mb-2">
                     Past due items:
                   </p>
-                  <ul className="text-sm text-red-600 dark:text-red-400 space-y-1">
+                  <ul className="text-sm text-red-400/80 space-y-1">
                     {connectStatus.requirementsPastDue.slice(0, 5).map((req, index) => (
                       <li key={index} className="flex items-center gap-2">
                         <span className="w-1 h-1 bg-red-500 rounded-full" />
@@ -372,9 +370,10 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
               )}
 
               <div className="flex flex-wrap gap-3">
-                <Button
+                <button
                   onClick={handleContinueOnboarding}
                   disabled={isContinuing}
+                  className="btn-primary"
                 >
                   {isContinuing ? (
                     <>
@@ -387,18 +386,18 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
                       <ExternalLink className="h-4 w-4 ml-2" />
                     </>
                   )}
-                </Button>
-                <Button
-                  variant="outline"
+                </button>
+                <button
                   onClick={handleRefreshStatus}
                   disabled={isRefreshing}
+                  className="btn-secondary !px-4"
                 >
                   {isRefreshing ? (
                     <RefreshCw className="h-4 w-4 animate-spin" />
                   ) : (
                     <RefreshCw className="h-4 w-4" />
                   )}
-                </Button>
+                </button>
               </div>
             </div>
           </div>
@@ -408,7 +407,6 @@ export function ConnectOnboarding({ className }: ConnectOnboardingProps) {
   }
 
   // User is fully onboarded - this component shouldn't render in this case
-  // but handle it gracefully
   return null;
 }
 
@@ -436,37 +434,37 @@ export function ConnectOnboardingBanner({ className }: ConnectOnboardingProps) {
   return (
     <div
       className={cn(
-        "bg-gradient-to-r from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 rounded-xl p-4 border border-primary/20",
+        "bg-gradient-to-r from-primary/20 to-primary/10 rounded-xl p-4 border border-primary/20",
         className
       )}
     >
       <div className="flex items-center gap-3">
-        <div className="p-2 bg-primary/10 rounded-lg">
+        <div className="p-2 bg-primary/20 rounded-lg">
           <CreditCard className="h-5 w-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-gray-900 dark:text-white text-sm">
+          <p className="font-medium text-white text-sm">
             {onboardingState === "not_started"
               ? "Set up payments"
               : "Complete setup"}
           </p>
-          <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+          <p className="text-xs text-gray-400 truncate">
             {onboardingState === "not_started"
               ? "Start accepting payments"
               : "Finish your account setup"}
           </p>
         </div>
-        <Button
-          size="sm"
+        <button
           onClick={handleContinue}
           disabled={isContinuing}
+          className="btn-primary !px-3 !py-2"
         >
           {isContinuing ? (
             <RefreshCw className="h-4 w-4 animate-spin" />
           ) : (
             <ArrowRight className="h-4 w-4" />
           )}
-        </Button>
+        </button>
       </div>
     </div>
   );

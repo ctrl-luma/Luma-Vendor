@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { setupAuthInterceptor } from '@/lib/api/interceptor';
 import { AuthContextProvider } from '@/contexts/AuthContext';
+import { SocketProvider } from '@/contexts/SocketContext';
 import { StripeConnectProvider } from '@/contexts/StripeConnectContext';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -12,9 +13,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContextProvider>
-      <StripeConnectProvider>
-        {children}
-      </StripeConnectProvider>
+      <SocketProvider>
+        <StripeConnectProvider>
+          {children}
+        </StripeConnectProvider>
+      </SocketProvider>
     </AuthContextProvider>
   );
 }

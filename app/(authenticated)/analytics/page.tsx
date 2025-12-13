@@ -1,15 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { TrendingUp, DollarSign, ShoppingCart, Users, Download, Share2, BarChart3, LineChart } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
-interface Metric {
-  label: string;
-  value: string;
-  change: number;
-  trend: "up" | "down";
-}
+import { TrendingUp, TrendingDown, Download, Share2, BarChart3, LineChart } from "lucide-react";
+import { MobileHeader } from "@/components/layout/mobile-header";
+import { cn } from "@/lib/utils";
 
 const metricsData = {
   today: [
@@ -101,305 +95,241 @@ const peakHours = [
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState<"today" | "week" | "month" | "all">("week");
   const [chartType, setChartType] = useState<"line" | "bar">("line");
-  
+
   const getCurrentData = () => {
     return revenueData[timeRange];
   };
-  
+
   const getMaxRevenue = () => {
     const data = getCurrentData();
     return Math.max(...data.map((item: any) => item.revenue));
   };
-  
+
   const getMinRevenue = () => {
     const data = getCurrentData();
     return Math.min(...data.map((item: any) => item.revenue));
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
-      <header className="sticky top-0 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 dark:supports-[backdrop-filter]:bg-gray-950/85 border-b border-gray-200 dark:border-gray-800 md:hidden">
-        <div className="flex items-center justify-between px-4 h-14">
-          <h1 className="text-xl font-semibold">Analytics</h1>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="ghost">
-              <Share2 className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="ghost">
-              <Download className="h-4 w-4" />
-            </Button>
+    <div className="min-h-full">
+      <MobileHeader title="Analytics" />
+
+      {/* Desktop header */}
+      <header className="hidden md:block border-b border-gray-800 bg-gray-950/50">
+        <div className="container py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="heading-2">Analytics</h1>
+              <p className="text-gray-400 mt-1">Track your business performance</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="btn-secondary !px-4 !py-2">
+                <Share2 className="h-4 w-4 mr-2" />
+                Share
+              </button>
+              <button className="btn-secondary !px-4 !py-2">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="pb-20 md:pb-8 md:pt-8">
-        <div className="md:max-w-7xl md:mx-auto md:px-4 lg:px-8">
-        <div className="px-4 py-4">
-          <div className="flex gap-2 mb-4 overflow-x-auto">
-            <Button
-              variant={timeRange === "today" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setTimeRange("today")}
-            >
-              Today
-            </Button>
-            <Button
-              variant={timeRange === "week" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setTimeRange("week")}
-            >
-              Week
-            </Button>
-            <Button
-              variant={timeRange === "month" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setTimeRange("month")}
-            >
-              Month
-            </Button>
-            <Button
-              variant={timeRange === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setTimeRange("all")}
-            >
-              All
-            </Button>
+      <main className="pb-20 md:pb-8 md:pt-6">
+        <div className="container space-y-6">
+          {/* Time Range Tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {(["today", "week", "month", "all"] as const).map((range) => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                className={cn(
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap capitalize",
+                  timeRange === range
+                    ? "bg-primary text-white shadow-lg shadow-primary/25"
+                    : "bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700"
+                )}
+              >
+                {range}
+              </button>
+            ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-6">
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-2 gap-3">
             {metricsData[timeRange].map((metric, index) => (
-              <div key={index} className="dashboard-card p-4">
-                <p className="text-sm text-muted-foreground">{metric.label}</p>
-                <p className="text-xl font-semibold mt-1">{metric.value}</p>
-                <div className={`flex items-center text-xs mt-2 ${
-                  metric.trend === "up" ? "text-green-600" : "text-red-600"
-                }`}>
-                  <TrendingUp className="h-3 w-3 mr-0.5" />
-                  {metric.change}%
+              <div key={index} className="card p-4">
+                <p className="text-sm text-gray-400">{metric.label}</p>
+                <p className="text-xl font-semibold text-white mt-1">{metric.value}</p>
+                <div className={cn(
+                  "flex items-center text-xs mt-2",
+                  metric.trend === "up" ? "text-green-400" : "text-red-400"
+                )}>
+                  {metric.trend === "up" ? (
+                    <TrendingUp className="h-3 w-3 mr-0.5" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 mr-0.5" />
+                  )}
+                  {Math.abs(metric.change)}%
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="dashboard-card mb-6">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-medium">Revenue Trend</h3>
-              <div className="flex items-center gap-1 bg-secondary rounded-lg p-1">
-                <Button
-                  size="sm"
-                  variant={chartType === "line" ? "default" : "ghost"}
-                  className="h-7 w-7 p-0"
+          {/* Revenue Chart */}
+          <div className="card overflow-hidden">
+            <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+              <h3 className="font-medium text-white">Revenue Trend</h3>
+              <div className="flex items-center gap-1 bg-gray-800 rounded-lg p-1">
+                <button
                   onClick={() => setChartType("line")}
+                  className={cn(
+                    "h-7 w-7 flex items-center justify-center rounded transition-colors",
+                    chartType === "line"
+                      ? "bg-primary text-white"
+                      : "text-gray-400 hover:text-white"
+                  )}
                 >
                   <LineChart className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant={chartType === "bar" ? "default" : "ghost"}
-                  className="h-7 w-7 p-0"
+                </button>
+                <button
                   onClick={() => setChartType("bar")}
+                  className={cn(
+                    "h-7 w-7 flex items-center justify-center rounded transition-colors",
+                    chartType === "bar"
+                      ? "bg-primary text-white"
+                      : "text-gray-400 hover:text-white"
+                  )}
                 >
                   <BarChart3 className="h-4 w-4" />
-                </Button>
+                </button>
               </div>
             </div>
             <div className="p-4 pl-16 relative">
               {chartType === "bar" ? (
                 <div className="relative">
                   {/* Y-axis labels */}
-                  <div className="absolute -left-12 top-0 h-40 flex flex-col justify-between text-xs text-muted-foreground">
+                  <div className="absolute -left-12 top-0 h-40 flex flex-col justify-between text-xs text-gray-500">
                     <span>${Math.round(getMaxRevenue()).toLocaleString()}</span>
                     <span>${Math.round((getMaxRevenue() + getMinRevenue()) / 2).toLocaleString()}</span>
                     <span>${Math.round(getMinRevenue()).toLocaleString()}</span>
                   </div>
-                  
+
                   <div className="h-40 relative">
-                    {/* Grid lines background */}
+                    {/* Grid lines */}
                     <div className="absolute inset-0">
                       {[0, 25, 50, 75, 100].map((y) => (
                         <div
                           key={y}
-                          className="absolute w-full border-t border-gray-200 dark:border-gray-700"
+                          className="absolute w-full border-t border-gray-800"
                           style={{ bottom: `${y}%` }}
                         />
                       ))}
                     </div>
-                    
+
+                    {/* Bars */}
                     <div className="absolute inset-0 flex items-end justify-between gap-1">
-                    {getCurrentData().map((item: any, index: number) => {
-                      const height = (item.revenue / getMaxRevenue()) * 100;
-                      return (
-                        <div key={index} className="flex-1 group relative flex flex-col items-center">
-                          <div className="w-full h-40 flex items-end">
-                            <div 
-                              className="bg-primary rounded-t w-full transition-all duration-300 hover:bg-primary/80 relative overflow-visible"
-                              style={{ 
-                                height: `${height}%`,
-                                animation: `barGrow 0.6s ease-out ${index * 50}ms both`
-                              }}
-                            >
-                              <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-card border border-border shadow-xl text-card-foreground text-xs px-3 py-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">
-                                <div className="font-semibold">${item.revenue.toLocaleString()}</div>
-                                <div className="text-muted-foreground mt-0.5">
-                                  {item.hour || item.day || item.week || item.month}
+                      {getCurrentData().map((item: any, index: number) => {
+                        const height = (item.revenue / getMaxRevenue()) * 100;
+                        return (
+                          <div key={index} className="flex-1 group relative flex flex-col items-center">
+                            <div className="w-full h-40 flex items-end">
+                              <div
+                                className="bg-primary rounded-t w-full transition-all duration-300 hover:bg-primary/80"
+                                style={{ height: `${height}%` }}
+                              >
+                                <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-gray-800 border border-gray-700 shadow-xl text-white text-xs px-3 py-2 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">
+                                  <div className="font-semibold">${item.revenue.toLocaleString()}</div>
+                                  <div className="text-gray-400 mt-0.5">
+                                    {item.hour || item.day || item.week || item.month}
+                                  </div>
                                 </div>
                               </div>
                             </div>
+                            <span className={`text-xs text-center mt-2 text-gray-500 ${
+                              (timeRange === 'today' && index % 2 === 1) ? 'hidden md:block' : ''
+                            }`}>
+                              {item.hour || item.day || item.week || item.month}
+                            </span>
                           </div>
-                          <span className={`text-xs text-center mt-2 text-muted-foreground ${
-                            (timeRange === 'today' && index % 2 === 1) ? 'hidden md:block' : ''
-                          }`}>
-                            {item.hour || item.day || item.week || item.month}
-                          </span>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
               ) : (
                 <div className="relative">
                   {/* Y-axis labels */}
-                  <div className="absolute -left-12 top-0 h-40 flex flex-col justify-between text-xs text-muted-foreground">
+                  <div className="absolute -left-12 top-0 h-40 flex flex-col justify-between text-xs text-gray-500">
                     <span>${Math.round(getMaxRevenue()).toLocaleString()}</span>
                     <span>${Math.round((getMaxRevenue() + getMinRevenue()) / 2).toLocaleString()}</span>
                     <span>${Math.round(getMinRevenue()).toLocaleString()}</span>
                   </div>
-                  
+
                   <div className="h-40 relative">
-                    {/* Grid lines background */}
+                    {/* Grid lines */}
                     <div className="absolute inset-0">
                       {[0, 25, 50, 75, 100].map((y) => (
                         <div
                           key={y}
-                          className="absolute w-full border-t border-gray-200 dark:border-gray-700"
+                          className="absolute w-full border-t border-gray-800"
                           style={{ bottom: `${y}%` }}
                         />
                       ))}
                     </div>
-                    
-                    {/* SVG for line chart */}
+
+                    {/* SVG Line Chart */}
                     <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                       <defs>
                         <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="rgb(96, 165, 250)" stopOpacity="0.3" />
-                          <stop offset="100%" stopColor="rgb(96, 165, 250)" stopOpacity="0" />
+                          <stop offset="0%" stopColor="rgb(37, 99, 235)" stopOpacity="0.3" />
+                          <stop offset="100%" stopColor="rgb(37, 99, 235)" stopOpacity="0" />
                         </linearGradient>
-                        <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="rgb(96, 165, 250)" />
-                          <stop offset="100%" stopColor="rgb(96, 165, 250)" />
-                        </linearGradient>
-                        <mask id="lineMask">
-                          <rect x="0" y="0" width="0" height="100" fill="white">
-                            <animate attributeName="width" from="0" to="100" dur="1.5s" fill="freeze" />
-                          </rect>
-                        </mask>
                       </defs>
-                      
+
                       {(() => {
                         const data = getCurrentData();
-                        
                         const points = data.map((item: any, index: number) => {
-                          // Center each point in its column, like the bar chart
                           const columnWidth = 100 / data.length;
                           const x = (index * columnWidth) + (columnWidth / 2);
                           const normalizedValue = (item.revenue - getMinRevenue()) / (getMaxRevenue() - getMinRevenue());
-                          const y = 95 - (normalizedValue * 85); // Invert and scale to use most of the height
+                          const y = 95 - (normalizedValue * 85);
                           return { x, y };
                         });
-                        
-                        // Extend the line to the edges
-                        const firstPoint = points[0];
-                        const lastPoint = points[points.length - 1];
+
                         const extendedPoints = [
-                          { x: 0, y: firstPoint.y }, // Extend to left edge
+                          { x: 0, y: points[0].y },
                           ...points,
-                          { x: 100, y: lastPoint.y } // Extend to right edge
+                          { x: 100, y: points[points.length - 1].y }
                         ];
-                        
+
                         const linePath = extendedPoints
                           .map((point, i) => `${i === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
                           .join(' ');
-                        
+
                         const areaPath = `${linePath} L 100 100 L 0 100 Z`;
-                        
+
                         return (
                           <g>
-                            {/* Area fill */}
-                            <path
-                              d={areaPath}
-                              fill="url(#areaGradient)"
-                              opacity="0"
-                            >
-                              <animate attributeName="opacity" from="0" to="1" dur="1s" begin="0.5s" fill="freeze" />
-                            </path>
-                            
-                            {/* Line */}
+                            <path d={areaPath} fill="url(#areaGradient)" />
                             <path
                               d={linePath}
                               fill="none"
-                              stroke="url(#lineGradient)"
+                              stroke="rgb(37, 99, 235)"
                               strokeWidth="2"
                               vectorEffect="non-scaling-stroke"
-                              mask="url(#lineMask)"
                             />
                           </g>
                         );
                       })()}
                     </svg>
-                    
-                    {/* Interactive hover areas with HTML tooltips */}
-                    <div className="absolute inset-0 flex">
-                      {getCurrentData().map((item: any, index: number) => {
-                        const data = getCurrentData();
-                        const normalizedValue = (item.revenue - getMinRevenue()) / (getMaxRevenue() - getMinRevenue());
-                        const yPercent = 5 + (normalizedValue * 85); // Match the SVG calculation but inverted for CSS
-                        
-                        return (
-                          <div
-                            key={index}
-                            className="relative flex-1 group h-full"
-                          >
-                            {/* Hover area */}
-                            <div className="absolute inset-0 cursor-pointer" />
-                            
-                            {/* Tooltip positioned at the data point */}
-                            <div 
-                              className="absolute opacity-0 group-hover:opacity-100 transition-all duration-200 z-30 pointer-events-none"
-                              style={{
-                                left: '50%',
-                                bottom: `${yPercent}%`,
-                                transform: 'translate(-50%, -12px)'
-                              }}
-                            >
-                              <div className="bg-card border border-border shadow-xl text-card-foreground text-xs px-3 py-2 rounded-md whitespace-nowrap">
-                                <div className="font-semibold">${item.revenue.toLocaleString()}</div>
-                                <div className="text-muted-foreground mt-0.5">
-                                  {item.hour || item.day || item.week || item.month}
-                                </div>
-                              </div>
-                            </div>
-                            
-                            {/* Visual indicator on hover */}
-                            <div 
-                              className="absolute w-0.5 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                              style={{
-                                left: '50%',
-                                top: 0,
-                                bottom: 0,
-                                transform: 'translateX(-50%)'
-                              }}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
                   </div>
-                  
+
                   {/* X-axis labels */}
-                  <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                  <div className="flex justify-between mt-2 text-xs text-gray-500">
                     {getCurrentData().map((item: any, index: number) => (
-                      <span 
+                      <span
                         key={index}
                         className={`flex-1 text-center ${
                           (timeRange === 'today' && index % 2 === 1) ? 'hidden md:block' : ''
@@ -414,65 +344,67 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="dashboard-card mb-6">
-            <div className="p-4 border-b">
-              <h3 className="font-medium">Top Products</h3>
+          {/* Top Products */}
+          <div className="card overflow-hidden">
+            <div className="p-4 border-b border-gray-800">
+              <h3 className="font-medium text-white">Top Products</h3>
             </div>
-            <div className="divide-y">
+            <div className="divide-y divide-gray-800">
               {topProducts.map((product, index) => (
                 <div key={index} className="p-4 flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-sm">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">{product.quantity} sold</p>
+                    <p className="font-medium text-sm text-white">{product.name}</p>
+                    <p className="text-xs text-gray-500">{product.quantity} sold</p>
                   </div>
-                  <p className="font-semibold">${product.revenue}</p>
+                  <p className="font-semibold text-white">${product.revenue}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="dashboard-card mb-6">
-            <div className="p-4 border-b">
-              <h3 className="font-medium">Peak Hours</h3>
+          {/* Peak Hours */}
+          <div className="card overflow-hidden">
+            <div className="p-4 border-b border-gray-800">
+              <h3 className="font-medium text-white">Peak Hours</h3>
             </div>
             <div className="p-4">
               <div className="space-y-3">
                 {peakHours.map((hour, index) => (
                   <div key={index} className="flex items-center gap-3">
-                    <span className="text-xs text-muted-foreground w-12">{hour.hour}</span>
-                    <div className="flex-1 bg-muted rounded-full h-4 overflow-hidden">
-                      <div 
+                    <span className="text-xs text-gray-500 w-12">{hour.hour}</span>
+                    <div className="flex-1 bg-gray-800 rounded-full h-4 overflow-hidden">
+                      <div
                         className="h-full bg-primary rounded-full transition-all"
                         style={{ width: `${hour.sales}%` }}
                       />
                     </div>
-                    <span className="text-xs font-medium w-8">{hour.sales}</span>
+                    <span className="text-xs font-medium text-white w-8">{hour.sales}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          <div className="dashboard-card">
-            <div className="p-4 border-b">
-              <h3 className="font-medium">Payment Methods</h3>
+          {/* Payment Methods */}
+          <div className="card overflow-hidden">
+            <div className="p-4 border-b border-gray-800">
+              <h3 className="font-medium text-white">Payment Methods</h3>
             </div>
             <div className="p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Credit Card</span>
-                <span className="text-sm font-medium">68%</span>
+                <span className="text-sm text-gray-400">Credit Card</span>
+                <span className="text-sm font-medium text-white">68%</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Cash</span>
-                <span className="text-sm font-medium">22%</span>
+                <span className="text-sm text-gray-400">Cash</span>
+                <span className="text-sm font-medium text-white">22%</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Digital Wallet</span>
-                <span className="text-sm font-medium">10%</span>
+                <span className="text-sm text-gray-400">Digital Wallet</span>
+                <span className="text-sm font-medium text-white">10%</span>
               </div>
             </div>
           </div>
-        </div>
         </div>
       </main>
     </div>

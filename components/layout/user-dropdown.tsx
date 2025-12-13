@@ -2,13 +2,11 @@
 
 import React from "react";
 import Link from "next/link";
-import { 
+import {
   User as UserIcon,
   CreditCard,
   LogOut,
-  ChevronDown,
-  Moon,
-  Sun
+  ChevronDown
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -22,7 +20,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { User } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { useTheme } from "next-themes";
 
 interface UserDropdownProps {
   user: User | null;
@@ -30,14 +27,7 @@ interface UserDropdownProps {
 }
 
 export function UserDropdown({ user, logout }: UserDropdownProps) {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!user || !mounted) return null;
+  if (!user) return null;
 
   // Get initials
   const getInitials = () => {
@@ -46,85 +36,62 @@ export function UserDropdown({ user, logout }: UserDropdownProps) {
     return `${firstInitial}${lastInitial}`.toUpperCase();
   };
 
-  // Blue gradient for avatar
-  const getGradient = () => {
-    return 'from-blue-400 to-blue-600';
-  };
-
-  const displayName = user.firstName && user.lastName 
-    ? `${user.firstName} ${user.lastName}`
-    : user.email;
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 px-3 hover:bg-accent/50">
+        <Button variant="ghost" className="relative h-10 px-3 hover:bg-gray-800/50">
           <div className="flex items-center gap-2">
-            <div className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br text-white font-medium text-sm",
-              getGradient()
-            )}>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-700 text-white font-medium text-sm">
               {getInitials()}
             </div>
             <div className="hidden lg:flex flex-col items-start">
               {user.firstName && (
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400 leading-tight">
+                <span className="text-sm font-medium text-gray-300 leading-tight">
                   {user.firstName}
                 </span>
               )}
               {user.lastName && (
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400 leading-tight">
+                <span className="text-sm font-medium text-gray-500 leading-tight">
                   {user.lastName}
                 </span>
               )}
             </div>
-            <ChevronDown className="h-4 w-4 opacity-50" />
+            <ChevronDown className="h-4 w-4 text-gray-500" />
           </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent className="w-56 bg-gray-900 border-gray-800" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             {user.firstName && (
-              <p className="text-sm font-medium leading-none">
+              <p className="text-sm font-medium leading-none text-white">
                 {user.firstName}
               </p>
             )}
             {user.lastName && (
-              <p className="text-xs leading-none text-muted-foreground">
+              <p className="text-xs leading-none text-gray-500">
                 {user.lastName}
               </p>
             )}
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="bg-gray-800" />
         <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem asChild className="text-gray-300 focus:bg-gray-800 focus:text-white">
             <Link href="/profile" className="cursor-pointer">
               <UserIcon className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem asChild className="text-gray-300 focus:bg-gray-800 focus:text-white">
             <Link href="/billing" className="cursor-pointer">
               <CreditCard className="mr-2 h-4 w-4" />
               <span>Plan & Billing</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <div 
-          className="flex items-center justify-between px-2 py-1.5 text-sm rounded-sm cursor-pointer hover:bg-accent transition-colors"
-          onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-        >
-          <span>Theme</span>
-          <div className="relative h-8 w-8 flex items-center justify-center">
-            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          </div>
-        </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={logout} className="text-red-600 dark:text-red-400">
+        <DropdownMenuSeparator className="bg-gray-800" />
+        <DropdownMenuItem onClick={logout} className="text-red-400 focus:bg-gray-800 focus:text-red-400">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>

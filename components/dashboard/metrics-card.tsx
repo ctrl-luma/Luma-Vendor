@@ -12,25 +12,25 @@ interface MetricCardProps {
   prefix?: string;
 }
 
-export function MetricCard({ 
-  title, 
-  value, 
-  change, 
+export function MetricCard({
+  title,
+  value,
+  change,
   changeType,
   prefix = ""
 }: MetricCardProps) {
   return (
-    <div className="dashboard-card p-4 hover:shadow-lg transition-all hover:-translate-y-0.5">
-      <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+    <div className="card p-4 hover:border-gray-700 transition-all">
+      <h3 className="text-sm font-medium text-gray-400">{title}</h3>
       <div className="flex items-baseline justify-between mt-1">
-        <p className="text-2xl font-semibold">
+        <p className="text-2xl font-semibold text-white">
           {prefix}{value}
         </p>
         <div className={cn(
           "flex items-center text-xs font-medium",
-          changeType === "positive" && "text-green-600",
-          changeType === "negative" && "text-red-600",
-          changeType === "neutral" && "text-muted-foreground"
+          changeType === "positive" && "text-green-400",
+          changeType === "negative" && "text-red-400",
+          changeType === "neutral" && "text-gray-400"
         )}>
           {changeType === "positive" && <ArrowUp className="h-3 w-3 mr-0.5" />}
           {changeType === "negative" && <ArrowDown className="h-3 w-3 mr-0.5" />}

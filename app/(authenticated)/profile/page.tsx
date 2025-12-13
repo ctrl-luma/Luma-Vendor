@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { MobileHeader } from "@/components/layout/mobile-header";
-import { 
+import {
   User,
   Mail,
   Phone,
@@ -15,10 +15,8 @@ import {
   Camera,
   AlertCircle,
   Edit,
-  X,
   Loader2
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { apiClient } from "@/lib/api/client";
@@ -53,14 +51,12 @@ export default function ProfilePage() {
   const [isEditingOrg, setIsEditingOrg] = useState(false);
   const [isSavingOrg, setIsSavingOrg] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [isLoadingOrg, setIsLoadingOrg] = useState(true);
   const [originalData, setOriginalData] = useState<FormData | null>(null);
   const [orgName, setOrgName] = useState("");
-  
+
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -104,7 +100,7 @@ export default function ProfilePage() {
         setIsLoadingOrg(false);
         return;
       }
-      
+
       try {
         const data = await apiClient.get<Organization>(`/organizations/${user.organizationId}`);
         setOrganization(data);
@@ -128,15 +124,12 @@ export default function ProfilePage() {
   const [originalNotifications, setOriginalNotifications] = useState<typeof notifications | null>(null);
 
   const formatPhoneNumber = (value: string, isDeleting: boolean = false) => {
-    // Remove all non-numeric characters
     const cleaned = value.replace(/\D/g, '');
-    
-    // If deleting and the cleaned value is empty, return empty string
+
     if (isDeleting && cleaned.length === 0) {
       return '';
     }
-    
-    // Apply US phone format
+
     let formatted = cleaned;
     if (cleaned.length >= 6) {
       formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
@@ -145,25 +138,20 @@ export default function ProfilePage() {
     } else if (cleaned.length > 0) {
       formatted = `(${cleaned}`;
     }
-    
+
     return formatted;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
+
     if (name === 'phone') {
-      // Get the raw numeric value
       const numericValue = value.replace(/\D/g, '');
-      
-      // Check if user is deleting (new value is shorter than old value)
       const isDeleting = value.length < formData.phone.length;
-      
-      // If deleting and the last character was a formatting character, remove more digits
+
       if (isDeleting) {
         const lastChar = formData.phone[formData.phone.length - 1];
         if (lastChar === ' ' || lastChar === '-' || lastChar === ')') {
-          // Remove one more digit
           const shorterNumeric = numericValue.slice(0, -1);
           const formatted = formatPhoneNumber(shorterNumeric, true);
           setFormData(prev => ({
@@ -173,8 +161,7 @@ export default function ProfilePage() {
           return;
         }
       }
-      
-      // Format normally
+
       const formattedPhone = formatPhoneNumber(value, isDeleting);
       setFormData(prev => ({
         ...prev,
@@ -190,37 +177,30 @@ export default function ProfilePage() {
 
   const handleNotificationChange = async (key: keyof typeof notifications) => {
     const newValue = !notifications[key];
-    
-    // Update local state immediately for UI responsiveness
+
     setNotifications(prev => ({
       ...prev,
       [key]: newValue
     }));
 
     setIsSavingNotifications(true);
-    
+
     try {
-      // Send update to backend
-      const updatedPrefs = await authService.updateNotificationPreferences({
+      await authService.updateNotificationPreferences({
         [key]: newValue
       });
-      
-      // The API returns only the notification preferences, not the full user
-      
+
       toast({
         title: "Notification preference updated",
         description: "Your notification settings have been saved.",
         variant: "success",
       });
     } catch (error: any) {
-      console.error('[Profile] Notification update error:', error);
-      
-      // Revert on error
       setNotifications(prev => ({
         ...prev,
         [key]: !newValue
       }));
-      
+
       toast({
         title: "Update failed",
         description: error.error || error.message || "Failed to update notification preferences",
@@ -253,7 +233,6 @@ export default function ProfilePage() {
       return;
     }
 
-    // Validate password requirements
     const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])(?=.*[a-z])(?=.*[A-Z]).+$/;
     if (!passwordRegex.test(formData.newPassword)) {
       toast({
@@ -265,18 +244,17 @@ export default function ProfilePage() {
     }
 
     setIsChangingPassword(true);
-    
+
     try {
       await apiClient.post('/auth/change-password', {
         newPassword: formData.newPassword,
       });
-      
+
       toast({
         title: "Password updated",
         description: "Your password has been changed successfully.",
       });
-      
-      // Clear password fields
+
       setFormData(prev => ({
         ...prev,
         currentPassword: "",
@@ -305,18 +283,18 @@ export default function ProfilePage() {
 
   const handleOrgSave = async () => {
     if (!organization || !user) return;
-    
+
     setIsSavingOrg(true);
-    
+
     try {
       const updatedOrg = await apiClient.put<Organization>(
         `/organizations/${organization.id}`,
         { name: orgName }
       );
-      
+
       setOrganization(updatedOrg);
       setIsEditingOrg(false);
-      
+
       toast({
         title: "Organization updated",
         description: "Organization name has been updated successfully.",
@@ -327,7 +305,6 @@ export default function ProfilePage() {
         description: error.error || "Failed to update organization",
         variant: "destructive",
       });
-      // Reset to original name on error
       setOrgName(organization.name);
     } finally {
       setIsSavingOrg(false);
@@ -336,21 +313,19 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    
+
     try {
-      // Prepare the update data
       const updateData: any = {};
-      
+
       if (formData.firstName !== originalData?.firstName) {
         updateData.firstName = formData.firstName;
       }
-      
+
       if (formData.lastName !== originalData?.lastName) {
         updateData.lastName = formData.lastName;
       }
-      
+
       if (formData.phone !== originalData?.phone) {
-        // Strip formatting from phone number
         const cleanPhone = formData.phone.replace(/\D/g, '');
         if (cleanPhone.length === 10) {
           updateData.phone = cleanPhone;
@@ -364,20 +339,17 @@ export default function ProfilePage() {
           return;
         }
       }
-      
-      // Only send request if there are changes
+
       if (Object.keys(updateData).length > 0) {
-        const response = await apiClient.patch('/auth/profile', updateData);
-        
-        // Update the user in auth context
+        await apiClient.patch('/auth/profile', updateData);
         await refreshUser();
-        
+
         toast({
           title: "Profile updated",
           description: "Your profile has been updated successfully.",
         });
       }
-      
+
       setIsEditing(false);
     } catch (error: any) {
       toast({
@@ -390,7 +362,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Avatar gradient
   const getInitials = () => {
     const firstInitial = user?.firstName?.[0] || user?.email?.[0] || "U";
     const lastInitial = user?.lastName?.[0] || "";
@@ -398,29 +369,29 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-black">
+    <div className="min-h-full">
       <MobileHeader title="Profile" />
-      
-      <main className="pb-20 md:pb-8 md:pt-8 min-h-full">
-        <div className="md:max-w-3xl md:mx-auto px-4 md:px-4 lg:px-8 space-y-8">
+
+      <main className="pb-20 md:pb-8">
+        <div className="container max-w-3xl space-y-6">
           {/* Profile Header */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+          <div className="card p-6">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="relative">
-                <div className="h-24 w-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-semibold">
+                <div className="h-24 w-24 rounded-full bg-gradient-to-br from-primary to-primary-700 flex items-center justify-center text-white text-2xl font-semibold shadow-xl shadow-primary/25">
                   {getInitials()}
                 </div>
-                <button className="absolute bottom-0 right-0 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                  <Camera className="h-4 w-4" />
+                <button className="absolute bottom-0 right-0 p-2 bg-gray-800 rounded-full shadow-lg border border-gray-700 hover:bg-gray-700 transition-colors">
+                  <Camera className="h-4 w-4 text-gray-400" />
                 </button>
               </div>
-              
+
               <div className="text-center md:text-left flex-1">
-                <h1 className="text-2xl font-semibold">
+                <h1 className="text-2xl font-semibold text-white">
                   {user?.firstName} {user?.lastName}
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400">{user?.email}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                <p className="text-gray-400">{user?.email}</p>
+                <p className="text-sm text-gray-500 mt-2">
                   Member since December 2024
                 </p>
               </div>
@@ -428,53 +399,51 @@ export default function ProfilePage() {
           </div>
 
           {/* Personal Information */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
+          <div className="card overflow-hidden">
+            <div className="p-6 border-b border-gray-800 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                 <User className="h-5 w-5" />
                 Personal Information
               </h2>
               {!isEditing ? (
-                <Button
+                <button
                   onClick={handleEditClick}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
+                  className="btn-secondary !px-3 !py-1.5 text-sm"
                 >
-                  <Edit className="h-4 w-4" />
+                  <Edit className="h-4 w-4 mr-1" />
                   Edit
-                </Button>
+                </button>
               ) : (
                 <div className="flex gap-2">
-                  <Button
+                  <button
                     onClick={handleCancel}
-                    variant="outline"
-                    size="sm"
                     disabled={isSaving}
+                    className="btn-secondary !px-3 !py-1.5 text-sm"
                   >
                     Cancel
-                  </Button>
-                  <Button
+                  </button>
+                  <button
                     onClick={handleSave}
-                    size="sm"
                     disabled={isSaving}
-                    className="flex items-center gap-2"
+                    className="btn-primary !px-3 !py-1.5 text-sm"
                   >
                     {isSaving ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Save className="h-4 w-4" />
+                      <>
+                        <Save className="h-4 w-4 mr-1" />
+                        Save
+                      </>
                     )}
-                    Save
-                  </Button>
+                  </button>
                 </div>
               )}
             </div>
-            
+
             <div className="p-6 space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium mb-2">First Name</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">First Name</label>
                   <input
                     type="text"
                     name="firstName"
@@ -482,17 +451,16 @@ export default function ProfilePage() {
                     onChange={handleInputChange}
                     disabled={!isEditing}
                     className={cn(
-                      "w-full px-3 py-2 border rounded-lg transition-colors",
-                      "dark:bg-gray-800 dark:border-gray-700",
-                      isEditing 
-                        ? "border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                        : "bg-gray-50 dark:bg-gray-800/50 cursor-not-allowed"
+                      "w-full px-3 py-2 border rounded-lg bg-gray-800 border-gray-700 text-white transition-colors",
+                      isEditing
+                        ? "focus:border-primary focus:ring-1 focus:ring-primary"
+                        : "opacity-60 cursor-not-allowed"
                     )}
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium mb-2">Last Name</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Last Name</label>
                   <input
                     type="text"
                     name="lastName"
@@ -500,18 +468,17 @@ export default function ProfilePage() {
                     onChange={handleInputChange}
                     disabled={!isEditing}
                     className={cn(
-                      "w-full px-3 py-2 border rounded-lg transition-colors",
-                      "dark:bg-gray-800 dark:border-gray-700",
-                      isEditing 
-                        ? "border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                        : "bg-gray-50 dark:bg-gray-800/50 cursor-not-allowed"
+                      "w-full px-3 py-2 border rounded-lg bg-gray-800 border-gray-700 text-white transition-colors",
+                      isEditing
+                        ? "focus:border-primary focus:ring-1 focus:ring-primary"
+                        : "opacity-60 cursor-not-allowed"
                     )}
                   />
                 </div>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                <label className="block text-sm font-medium text-gray-400 mb-2 flex items-center gap-2">
                   <Mail className="h-4 w-4" />
                   Email Address
                 </label>
@@ -521,21 +488,21 @@ export default function ProfilePage() {
                     name="email"
                     value={formData.email}
                     disabled
-                    className="w-full px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-800/50 cursor-not-allowed dark:border-gray-700 text-gray-600 dark:text-gray-400"
+                    className="w-full px-3 py-2 border rounded-lg bg-gray-800/50 border-gray-700 cursor-not-allowed text-gray-500"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">Locked</span>
+                    <span className="text-xs text-gray-500 bg-gray-700 px-2 py-1 rounded">Locked</span>
                   </div>
                 </div>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium text-gray-400 mb-2">
                   Phone Number
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-                  <span className="absolute left-12 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 select-none">+1</span>
+                  <span className="absolute left-12 top-1/2 -translate-y-1/2 text-gray-400 select-none">+1</span>
                   <input
                     type="tel"
                     name="phone"
@@ -544,35 +511,33 @@ export default function ProfilePage() {
                     disabled={!isEditing}
                     placeholder="(555) 123-4567"
                     className={cn(
-                      "w-full pl-20 pr-3 py-2 border rounded-lg transition-colors",
-                      "dark:bg-gray-800 dark:border-gray-700",
-                      isEditing 
-                        ? "border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-                        : "bg-gray-50 dark:bg-gray-800/50 cursor-not-allowed"
+                      "w-full pl-20 pr-3 py-2 border rounded-lg bg-gray-800 border-gray-700 text-white transition-colors",
+                      isEditing
+                        ? "focus:border-primary focus:ring-1 focus:ring-primary"
+                        : "opacity-60 cursor-not-allowed"
                     )}
                   />
                 </div>
               </div>
-
             </div>
           </div>
 
           {/* Security */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
+          <div className="card overflow-hidden">
+            <div className="p-6 border-b border-gray-800">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                 <Shield className="h-5 w-5" />
                 Security
               </h2>
             </div>
-            
+
             <div className="p-6 space-y-6">
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                  <AlertCircle className="h-5 w-5 text-primary mt-0.5" />
                   <div className="text-sm">
-                    <p className="font-medium text-blue-900 dark:text-blue-100">Password Requirements</p>
-                    <ul className="mt-1 text-blue-700 dark:text-blue-300 space-y-1">
+                    <p className="font-medium text-white">Password Requirements</p>
+                    <ul className="mt-1 text-gray-400 space-y-1">
                       <li>• Contains at least 1 number</li>
                       <li>• Contains at least 1 special character</li>
                       <li>• Contains at least 1 uppercase letter</li>
@@ -581,10 +546,10 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">New Password</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">New Password</label>
                   <div className="relative">
                     <input
                       type={showNewPassword ? "text" : "password"}
@@ -592,34 +557,33 @@ export default function ProfilePage() {
                       value={formData.newPassword}
                       onChange={handleInputChange}
                       autoComplete="new-password"
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-3 py-2 pr-10 border border-gray-700 rounded-lg bg-gray-800 text-white focus:border-primary focus:ring-1 focus:ring-primary"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
                     >
                       {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium mb-2">Confirm New Password</label>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Confirm New Password</label>
                   <input
                     type={showNewPassword ? "text" : "password"}
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     autoComplete="new-password"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white focus:border-primary focus:ring-1 focus:ring-primary"
                   />
                 </div>
               </div>
-              
-              <Button 
-                variant="outline" 
-                className="w-full md:w-auto"
+
+              <button
+                className="btn-secondary"
                 onClick={handlePasswordChange}
                 disabled={!formData.newPassword || !formData.confirmPassword || isChangingPassword}
               >
@@ -631,29 +595,29 @@ export default function ProfilePage() {
                 ) : (
                   "Update Password"
                 )}
-              </Button>
+              </button>
             </div>
           </div>
 
           {/* Notifications */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
+          <div className="card overflow-hidden">
+            <div className="p-6 border-b border-gray-800">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                 <Bell className="h-5 w-5" />
                 Notifications
               </h2>
             </div>
-            
+
             <div className="p-6 space-y-4">
               {Object.entries(notifications).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between py-2">
                   <div>
-                    <p className="font-medium">
+                    <p className="font-medium text-white">
                       {key === 'emailAlerts' && 'Email Alerts'}
                       {key === 'marketingEmails' && 'Marketing Emails'}
                       {key === 'weeklyReports' && 'Weekly Reports'}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-gray-400">
                       {key === 'emailAlerts' && 'Receive important updates via email'}
                       {key === 'marketingEmails' && 'Stay updated with our latest features and offers'}
                       {key === 'weeklyReports' && 'Get weekly summary of your business performance'}
@@ -664,7 +628,7 @@ export default function ProfilePage() {
                     disabled={isSavingNotifications}
                     className={cn(
                       "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                      value ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-700",
+                      value ? "bg-primary" : "bg-gray-700",
                       isSavingNotifications && "opacity-50 cursor-not-allowed"
                     )}
                   >
@@ -681,93 +645,91 @@ export default function ProfilePage() {
           </div>
 
           {/* Organization */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
+          <div className="card overflow-hidden">
+            <div className="p-6 border-b border-gray-800 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                 <Building className="h-5 w-5" />
                 Organization
               </h2>
               {user?.role === 'owner' || user?.role === 'admin' ? (
                 !isEditingOrg ? (
-                  <Button
+                  <button
                     onClick={handleOrgEdit}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
+                    className="btn-secondary !px-3 !py-1.5 text-sm"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4 mr-1" />
                     Edit
-                  </Button>
+                  </button>
                 ) : (
                   <div className="flex gap-2">
-                    <Button
+                    <button
                       onClick={handleOrgCancel}
-                      variant="outline"
-                      size="sm"
                       disabled={isSavingOrg}
+                      className="btn-secondary !px-3 !py-1.5 text-sm"
                     >
                       Cancel
-                    </Button>
-                    <Button
+                    </button>
+                    <button
                       onClick={handleOrgSave}
-                      size="sm"
                       disabled={isSavingOrg || !orgName.trim()}
-                      className="flex items-center gap-2"
+                      className="btn-primary !px-3 !py-1.5 text-sm"
                     >
                       {isSavingOrg ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        <Save className="h-4 w-4" />
+                        <>
+                          <Save className="h-4 w-4 mr-1" />
+                          Save
+                        </>
                       )}
-                      Save
-                    </Button>
+                    </button>
                   </div>
                 )
               ) : null}
             </div>
-            
+
             <div className="p-6 space-y-4">
               {isLoadingOrg ? (
                 <div className="space-y-3">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2"></div>
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/3"></div>
+                  <div className="h-4 bg-gray-800 rounded animate-pulse w-1/2"></div>
+                  <div className="h-4 bg-gray-800 rounded animate-pulse w-3/4"></div>
+                  <div className="h-4 bg-gray-800 rounded animate-pulse w-1/3"></div>
                 </div>
               ) : (
                 <>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Organization Name</p>
+                    <p className="text-sm text-gray-400 mb-2">Organization Name</p>
                     {isEditingOrg ? (
                       <input
                         type="text"
                         value={orgName}
                         onChange={(e) => setOrgName(e.target.value)}
-                        className="w-full px-3 py-2 border rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border rounded-lg border-gray-700 bg-gray-800 text-white focus:border-primary focus:ring-1 focus:ring-primary"
                         placeholder="Enter organization name"
                       />
                     ) : (
-                      <p className="font-medium">{organization?.name || 'N/A'}</p>
+                      <p className="font-medium text-white">{organization?.name || 'N/A'}</p>
                     )}
                   </div>
-                  
+
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Organization ID</p>
-                    <p className="font-mono text-sm">{user?.organizationId}</p>
+                    <p className="text-sm text-gray-400">Organization ID</p>
+                    <p className="font-mono text-sm text-white">{user?.organizationId}</p>
                   </div>
-                  
+
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Your Role</p>
-                    <p className="font-medium capitalize">{user?.role || 'Owner'}</p>
+                    <p className="text-sm text-gray-400">Your Role</p>
+                    <p className="font-medium capitalize text-white">{user?.role || 'Owner'}</p>
                   </div>
-                  
+
                   {organization?.createdAt && (
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Organization Created</p>
-                      <p className="font-medium">
-                        {new Date(organization.createdAt).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
+                      <p className="text-sm text-gray-400">Organization Created</p>
+                      <p className="font-medium text-white">
+                        {new Date(organization.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
                         })}
                       </p>
                     </div>
@@ -778,11 +740,11 @@ export default function ProfilePage() {
           </div>
 
           {/* Danger Zone */}
-          <div className="bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 p-6">
-            <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-red-400 mb-2">
               Danger Zone
             </h3>
-            <p className="text-sm text-red-700 dark:text-red-300 mb-4">
+            <p className="text-sm text-red-400/80">
               To delete your account, please contact our support team at <a href="mailto:support@lumapos.co" className="underline font-medium">support@lumapos.co</a>
             </p>
           </div>

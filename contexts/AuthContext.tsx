@@ -11,6 +11,7 @@ interface AuthContextValue {
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  setAuthFromCallback: (userData: User) => void;
   error: string | null;
 }
 
@@ -102,12 +103,19 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
     // Navigate immediately for better UX
     setUser(null);
     router.push('/login');
-    
+
     // Handle the API call in the background
     authService.logout().catch(() => {
       // Silently handle error - user is already logged out locally
     });
   }, [router]);
+
+  // Called from auth callback after tokens are stored
+  const setAuthFromCallback = useCallback((userData: User) => {
+    console.log('[AuthContext] setAuthFromCallback called with user:', userData);
+    setUser(userData);
+    setIsLoading(false);
+  }, []);
 
   const value: AuthContextValue = {
     user,
@@ -116,6 +124,7 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
     login,
     logout,
     refreshUser,
+    setAuthFromCallback,
     error,
   };
 

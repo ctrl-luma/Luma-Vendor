@@ -1,13 +1,7 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
-import { ThemeProvider } from '@/components/providers/theme-provider'
 import { AuthProvider } from '@/components/providers/auth-provider'
-import { MobileNav } from '@/components/layout/mobile-nav'
-import { DesktopNav } from '@/components/layout/desktop-nav'
 import { Toaster } from 'sonner'
-
-const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Luma Dashboard',
@@ -31,6 +25,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
+  themeColor: '#000000',
 }
 
 export default function RootLayout({
@@ -39,30 +34,25 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AuthProvider>
-            {children}
-            <Toaster 
-              position="top-left" 
-              expand={false}
-              richColors
-              theme="dark"
-              toastOptions={{
-                style: {
-                  marginTop: '64px',
-                },
-                className: 'animate-slide-in-left',
-              }}
-            />
-          </AuthProvider>
-        </ThemeProvider>
+    <html lang="en">
+      <body>
+        <AuthProvider>
+          {children}
+          <Toaster
+            position="top-left"
+            expand={false}
+            richColors
+            theme="dark"
+            toastOptions={{
+              style: {
+                marginTop: '64px',
+                background: '#111827',
+                border: '1px solid #374151',
+                color: '#F3F4F6',
+              },
+            }}
+          />
+        </AuthProvider>
       </body>
     </html>
   )
